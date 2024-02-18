@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat App</title>
+</head>
+<body>
+<h1>Chat App</h1>
+<div>
+    <div>
+        <button id="button_connect" type="submit"> Connect to Chat Room</button>
+        <button id="button_disconnect" type="submit" disabled="disabled">Disconnect</button>
+        <br/><br/>
+    </div>
+    <div id="chatBlock">
+        <label>ChatId: </label><input type="text" id="chat_id"/><br/><br/>
+        <label>User Name: </label><input type="text" id="user"/><br/><br/>
+        <label>Message: </label><label for="message"></label><textarea id="message"></textarea></textarea><br/><br/>
+        <button id="sendMessage" type="submit">Send</button>
+        <br/>
+        <br/>
+        <button id="deleteMessage" type="submit">Delete Message</button>
+        <label>Delete message id: </label><input type="text" id="deleteMessageId"/><br/><br/>
+        <br/>
+        <button id="updateMessage" type="submit">Update Message</button>
+        <label>Update message id: </label><input type="text" id="updateMessageId"/><br/><br/>
+        <label>Update message: </label><label for="message"></label><textarea id="update_message"></textarea></textarea>
+        <br/><br/>
+        <p id="chatResponse"></p>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    let stompClient = null;
+    let el = null;
+
+    function connect() {
+        const socket = new SockJS('/ws/');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            setConnected(true);
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/chat', function (output) {
+                chatOutput(JSON.parse(output.body));
+            });
+        });
+    }
+
+    function disconnect() {
+        stompClient.disconnect();
+        setConnected(false);
+        console.log("Disconnected");
+    }
+
+    function setConnected(connected) {
+        document.getElementById('button_connect').disabled = connected;
+        document.getElementById('button_disconnect').disabled = !connected;
+        document.getElementById('chatBlock').style.visibility = connected ? 'visible' : 'hidden';
+        document.getElementById('chatResponse').innerHTML = '';
+    }
+
+    function sendMessage() {
+        const user = document.getElementById('user').value;
+        const message = document.getElementById('message').value;
+        const chatId = document.getElementById('chat_id').value;
+        if (message === "") {
+            console.log("Message not be null");
+        } else {
+            stompClient.send("/app/add", {}, JSON.stringify({'chatId': chatId, 'text': message, 'senderName': user}));
+        }
+        document.getElementById('message').value = "";
+    }
+
+    function deleteMessage() {
+        const deleteMessageId = document.getElementById('deleteMessageId').value;
+        const chatId = document.getElementById('chat_id').value;
+        let elementById = document.getElementById("chatResponse");
+        const response = elementById.getElementsByTagName("p");
+        for (el of response) {
+            let arr = Array.of(el);
+            if (arr.find((element) => element.innerHTML.includes(" (ID message: " + deleteMessageId + "): "))) {
+                el.remove();
+                stompClient.send("/app/delete", {}, JSON.stringify({
+                    'idMessage': deleteMessageId,
+                    'idChat' : chatId
+                }));
+            }
+        }
+        document.getElementById('deleteMessageId').value = "";
+    }
+
+    function updateMessage() {
+        const updateMessageId = document.getElementById('updateMessageId').value;
+        const elementById = document.getElementById("chatResponse");
+        const response = elementById.getElementsByTagName("p");
+        const user = document.getElementById('user').value;
+        const chatId = document.getElementById('chat_id').value;
+
+        for (el of response) {
+            let arr = Array.of(el);
+            if (arr.find((element) => !element.innerHTML.includes(" (ID message: " + updateMessageId + "): "))) {
+                console.log("ID incorrect");
+            }
+            if ((arr.find((element) => element.innerHTML.includes(" (ID message: " + updateMessageId + "): "))) && (arr.find((element) => element.innerHTML.includes(user)))) {
+                const user = document.getElementById('user').value;
+                const updateMessage = document.getElementById('update_message').value;
+                const currentDate = new Date();
+                const formattedDate = formatDate(currentDate, "YYYY-MM-DD hh:mm");
+                el.innerHTML = " (ID message: " + updateMessageId + "): " + user + " (" + formattedDate + "): " + updateMessage;
+                stompClient.send("/app/update", {}, JSON.stringify({
+                    'id': updateMessageId,
+                    'updatedText': updateMessage,
+                    'senderName': user,
+                    'chatId' : chatId
+                }));
+            }
+        }
+        document.getElementById('updateMessageId').value = "";
+        document.getElementById('update_message').value = "";
+    }
+
+    function formatDate(date, format) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+
+        return format
+            .replace(/YYYY/g, year)
+            .replace(/MM/g, month)
+            .replace(/DD/g, day)
+            .replace(/hh/g, hours)
+            .replace(/mm/g, minutes);
+    }
+
+    function chatOutput(jsonMsg) {
+        const elementById = document.getElementById('chatResponse');
+        const response = elementById.getElementsByTagName("p");
+        const p = document.createElement('p');
+
+        const currentDate = new Date();
+        const formattedDate = formatDate(currentDate, "YYYY-MM-DD hh:mm");
+        if (jsonMsg.text != null) {
+            p.innerHTML = " (ID message: " + jsonMsg.id + "): " + jsonMsg.senderName + " (" + formattedDate + "): " + jsonMsg.text;
+            elementById.appendChild(p);
+        }
+        for (el of response) {
+            let arr = Array.of(el);
+            if ((arr.find((element) => element.innerHTML.includes(" (ID message: " + jsonMsg.id + "): "))) && jsonMsg.isUpdated === true) {
+                el.innerHTML = " (ID message: " + jsonMsg.id + "): " + jsonMsg.senderName + " (" + formattedDate + "): " + jsonMsg.updatedText;
+            }
+            if ((arr.find((element) => element.innerHTML.includes(" (ID message: " + jsonMsg.idMessage + "): "))) && jsonMsg.isDeleted === true) {
+                el.remove();
+            }
+        }
+
+    }
+
+    document.getElementById("button_connect").addEventListener("click", connect);
+    document.getElementById("button_disconnect").addEventListener("click", disconnect);
+    document.getElementById("sendMessage").addEventListener("click", sendMessage);
+    document.getElementById("deleteMessage").addEventListener("click", deleteMessage);
+    document.getElementById("updateMessage").addEventListener("click", updateMessage);
+</script>
+</body>
+</html>

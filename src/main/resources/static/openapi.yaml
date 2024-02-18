@@ -1,0 +1,881 @@
+openapi: 3.0.1
+info:
+  title: Social-Media-Api
+  version: v1
+  description: "Спецификация для проекта Social-Media-Api."
+servers:
+  - url: http://localhost:8080
+    description: local server
+paths:
+
+  /api/v1/post/get:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Post endpoints
+      summary: "Получение поста по id"
+      operationId: getPost
+      parameters:
+        - name: postId
+          description: "ID поста"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post successful get
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/post/getFeedUser:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Post endpoints
+      summary: "Получение постов (ленты активности) от пользователей на которых подписан пользователь"
+      operationId: getFeedUser
+      parameters:
+        - name: postId
+          description: "ID пользователя для которого будет отображена лента активности"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+        - name: page
+          description: "Номер отображаемой страницы ленты активности (начинается с 0)"
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          description: "Количество постов на одной странице"
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: integer
+            default: 2
+        - name: isSortAsDesk
+          description: "Сортировка по времени публикации постов (true - по убыванию, false - по возрастанию)"
+          in: query
+          required: true
+          allowEmptyValue: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Successful get last posts followers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostDto'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/post/create:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Post endpoints
+      summary: "Создание поста"
+      operationId: cretePost
+      requestBody:
+        description: "Ввод описания, сообщения и загрузка картинки для создания поста"
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                postDto:
+                  $ref: '#/components/schemas/PostDto'
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Post successful created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/post/update:
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Post endpoints
+      summary: "Изменение данных в посте"
+      operationId: updatePost
+      parameters:
+        - name: postId
+          description: "ID поста"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      requestBody:
+        description: "Ввод описания, сообщения и загрузка картинки для изменения существующего поста"
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                postDto:
+                  $ref: '#/components/schemas/PostDto'
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Post successful changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/v1/post/delete:
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Post endpoints
+      summary: "Удаление поста по id"
+      operationId: deletePost
+      parameters:
+        - name: postId
+          description: "ID поста"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "Post with id = 1 deleted!"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/v1/chat/get:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Chat endpoints
+      summary: "Получение чата по id"
+      operationId: getChat
+      parameters:
+        - name: chatId
+          description: "ID чата"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful get chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatDto'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/chat/last_message/admin:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Chat endpoints
+      summary: "Получение последнего сообщения в чате по id чата (Доступен только авторизованным пользователям с ролью ADMIN)"
+      operationId: getLastMessageFromChat
+      parameters:
+        - name: chatId
+          description: "ID чата"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful get last message at chat
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "Последнее сообщение в чате"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/chat/create:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Chat endpoints
+      summary: "Создание чата"
+      operationId: createChat
+      requestBody:
+        description: "Ввод id первого и второго пользователей для создания чата между ними"
+        content:
+          application/json:
+            schema:
+              properties:
+                chatDto:
+                  $ref: '#/components/schemas/ChatDto'
+      responses:
+        '201':
+          description: Successful create chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatDto'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/chat/join:
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Chat endpoints
+      summary: "Присоединение к чату по id чата и по id пользователя"
+      operationId: joinChat
+      parameters:
+        - name: chatId
+          description: "ID чата"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+        - name: userId
+          description: "ID пользователя"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      responses:
+        '202':
+          description: Successful join into chat
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "User with id = 1 join to chat with id = 1"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/chat/leave:
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Chat endpoints
+      summary: "Отключение от чата по id чата и по id пользователя"
+      operationId: leaveChat
+      parameters:
+        - name: chatId
+          description: "ID чата"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+        - name: userId
+          description: "ID пользователя"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      responses:
+        '202':
+          description: Successful join into chat
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "User with id = 1 leave to chat with id = 1"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/chat/delete:
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Chat endpoints
+      summary: "Удаление чата по id"
+      operationId: deleteChat
+      parameters:
+        - name: chatId
+          description: "ID чата"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful delete chat
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "Chat with id = 1 deleted!"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/v1/user/friendRequest:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Отправка запроса <добавить в друзья>"
+      operationId: createFriendRequest
+      parameters:
+        - name: userIdFrom
+          description: "ID пользователя отправляющего заявку <добавить в друзья>"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+        - name: userIdTo
+          description: "ID пользователя, которому отправили заявку <добавить в друзья>"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 2
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend request successful post
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "User with id = 1 send friend request to user with id = 2"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/acceptFriendRequest:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Принятие запроса <добавить в друзья>"
+      operationId: acceptFriendRequest
+      parameters:
+        - name: userIdFrom
+          description: "ID пользователя отправляющего заявку <добавить в друзья>"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+        - name: userIdAccepted
+          description: "ID пользователя принимающего заявку <добавить в друзья>"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 2
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend successful accept friend request
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "User with id = 2 accept friend request to user with id = 1"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/refuseFriendRequest:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Отклонение запроса <добавить в друзья>"
+      operationId: refuseFriendRequest
+      parameters:
+        - name: userIdFrom
+          description: "ID пользователя отправляющего заявку <добавить в друзья>"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+        - name: userIdRefused
+          description: "ID пользователя отклонившего заявку <добавить в друзья>"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 2
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend request successful refuse
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "User with id = 2 refused friend request to user with id = 1"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/refuseFollower:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Отклонение подписки на человека"
+      operationId: refuseFollower
+      parameters:
+        - name: userIdFollower
+          description: "ID пользователя, который отказывается от подписки на другого пользователя"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+        - name: userId
+          description: "ID пользователя, на которого подписан пользователь"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 2
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend successful refuse follower
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "User with id = 1 refused follower to user with id = 2"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/deleteFriend:
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Удаление пользователя из друзей"
+      operationId: deleteFriend
+      parameters:
+        - name: userId
+          description: "ID пользователя, который удаляет из друзей"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+        - name: userIdDeleted
+          description: "ID пользователя, которого удалили из друзей"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 2
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend successful delete friend
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "User with id = 1 delete friend with id = 2"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Authentification endpoints
+      summary: "Аутентификация пользователя"
+      operationId: login
+      requestBody:
+        description: "Ввод имени и пароля пользователя для прохождения аутентификации"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JwtRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Authentification endpoints
+      summary: "Регистрация пользователя"
+      operationId: register
+      requestBody:
+        description: "Ввод имени, пароля и электронной почты для регистрации пользователя"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+        required: true
+      responses:
+        '200':
+          description: Successful registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/refresh:
+    post:
+      tags:
+        - Authentification endpoints
+      summary: "Обновление токена аутентификации и токена обновления"
+      operationId: refresh
+      requestBody:
+        description: "Ввод токена обновления"
+        content:
+          application/json:
+            schema:
+              type: string
+              example: "$2a$10$j1PJv6GskindBDL2ZtyOj.gCzrMVx57/HeKp0zOBdd1.F1lWoseU6"
+        required: true
+      responses:
+        '200':
+          description: Successful refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PostDto:
+      required:
+        - description
+        - message
+      type: object
+      properties:
+        description:
+          type: string
+          description: "Описание поста"
+          example: "Description"
+        message:
+          type: string
+          description: "Сообщение поста"
+          example: "Message"
+        imageLink:
+          type: string
+          readOnly: true
+          description: "Ссылка на загруженную картинку"
+          example: "http://localhost:9000/images/325c0226-8acb-41ad-a214-40ff773b35bc%3A%20%3C2024-01-11T16%3A35%3A05.852513900%3E%20image_name.jpeg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20240111%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240111T133505Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=ccdb4e6f980e323932d98dc5ae6ab6ba04925f7fb5fe113afa76b64df71bd92d"
+        imageName:
+          type: string
+          readOnly: true
+          description: "Название загруженной картинки"
+          example: "325c0226-8acb-41ad-a214-40ff773b35bc: <2024-01-11T16:35:05.852513900> image_name.jpeg"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: "Дата и время создания(изменения) поста"
+          example: "2024-01-12 13:56"
+          pattern: "yyyy-MM-dd HH:mm"
+
+    ChatDto:
+      required:
+        - firstUserId
+        - secondUserId
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: "Id чата"
+          example: "1"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: "Дата и время создания чата"
+          example: "2024-01-12 13:56"
+          pattern: "yyyy-MM-dd HH:mm"
+        lastMessage:
+          type: string
+          readOnly: true
+          description: "Последенее сообщение в чате"
+          example: "Последенее сообщение в чате"
+        firstUserId:
+          type: integer
+          description: "Id первого пользователя в чате"
+          example: "1"
+        secondUserId:
+          type: integer
+          description: "Id второго пользователя в чате"
+          example: "2"
+
+    JwtRequest:
+      required:
+        - name
+        - password
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Имя пользователя"
+          example: "Sergey"
+        password:
+          type: string
+          description: "Пароль пользователя"
+          example: "111"
+
+    JwtResponse:
+      required:
+        - id
+        - name
+        - accessToken
+        - refreshToken
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Id пользователя"
+          example: "1"
+        name:
+          type: string
+          description: "Имя пользователя"
+          example: "Sergey"
+        accessToken:
+          type: string
+          description: "Токен аутентификации"
+          example: "$2a$12$uhKy.MGqmfYcgbkTd3ZR.eyXKVrU3gm0epHhSy6cfXzydbX4n3Ws2"
+        refreshToken:
+          type: string
+          description: "Токен обновления токена аутентификации"
+          example: "$2a$12$5lWa/FKZ925t3p.QDvj/oeo38ot7Lna9vhhiCYCOBv8YV0h2uN/5q"
+
+    UserDto:
+      required:
+        - email
+        - name
+        - password
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Имя пользователя"
+          example: "Sergey"
+        password:
+          type: string
+          description: "Пароль пользователя"
+          example: "111"
+          writeOnly: true
+        email:
+          type: string
+          description: "Электронная почта пользователя"
+          example: "Sergey@gmail.com"
+
+    ErrorResponse:
+      type: object
+      properties:
+        messageError:
+          type: string
+          description: Error message
+          example: "Error"
