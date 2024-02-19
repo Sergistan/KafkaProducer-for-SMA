@@ -1,6 +1,7 @@
 package com.utochkin.kafkaproducerforsma.services.impl;
 
 import com.utochkin.kafkaproducerforsma.dto.UserDto;
+import com.utochkin.kafkaproducerforsma.exceptions.BadCredentialsException;
 import com.utochkin.kafkaproducerforsma.exceptions.BadInputDataException;
 import com.utochkin.kafkaproducerforsma.exceptions.ChatNotFoundException;
 import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
@@ -12,9 +13,12 @@ import com.utochkin.kafkaproducerforsma.repository.UserRepository;
 import com.utochkin.kafkaproducerforsma.services.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
@@ -48,7 +52,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void createFriendRequest(Long userIdFrom, Long userIdTo) {
-        User userFrom = userRepository.findById(userIdFrom).orElseThrow(UserNotFoundException::new);
+        User userFrom = checkCredential(userIdFrom);
         User userTo = userRepository.findById(userIdTo).orElseThrow(UserNotFoundException::new);
         if (userFrom.getFriends().contains(userTo)) {
             throw new BadInputDataException(String.format("User with id = %s already have friend with id = %s", userIdFrom, userIdTo));
@@ -58,7 +62,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void acceptFriendRequest(Long userIdFrom, Long userIdAccepted) {
-        User userFrom = userRepository.findById(userIdFrom).orElseThrow(UserNotFoundException::new);
+        User userFrom = checkCredential(userIdFrom);
         User userAcceptedRequest = userRepository.findById(userIdAccepted).orElseThrow(UserNotFoundException::new);
         if (userFrom.getFriends().contains(userAcceptedRequest)) {
             throw new BadInputDataException(String.format("User with id = %s already friend with id = %s", userIdFrom, userIdAccepted));
@@ -68,9 +72,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void refuseFriendRequest(Long userIdFrom, Long userIdRefused) {
+    public void refuseFriendRequest(Long userIdRefused, Long userIdFrom) {
+        User userRefusedRequest = checkCredential(userIdRefused);
         User userFrom = userRepository.findById(userIdFrom).orElseThrow(UserNotFoundException::new);
-        User userRefusedRequest = userRepository.findById(userIdRefused).orElseThrow(UserNotFoundException::new);
         if (userFrom.getFriends().contains(userRefusedRequest)) {
             throw new BadInputDataException(String.format("User with id = %s already accept friend request user with id = %s", userIdFrom, userIdRefused));
         }
@@ -79,8 +83,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void refuseFollower(Long userIdFollower, Long userId) {
+        User follower = checkCredential(userIdFollower);
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-        User follower = userRepository.findById(userIdFollower).orElseThrow(UserNotFoundException::new);
         if (!user.getFollowers().contains(follower)) {
             throw new BadInputDataException(String.format("User with id = %s not have follower with id = %s", userId, userIdFollower));
         }
@@ -89,7 +93,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteFriend(Long userId, Long userIdDeleted) {
-        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        User user = checkCredential(userId);
         User userDeleted = userRepository.findById(userIdDeleted).orElseThrow(UserNotFoundException::new);
         if (!user.getFriends().contains(userDeleted)) {
             throw new BadInputDataException(String.format("User with id = %s not have friend with id = %s", userId, userIdDeleted));
@@ -104,5 +108,13 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    public User checkCredential (Long userId) throws BadCredentialsException{
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<User> userCredential = userRepository.findByName(name);
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        if  (userCredential.isPresent() && !user.equals(userCredential.get())){
+            throw new BadCredentialsException();
+        } else return user;
+    }
 
 }

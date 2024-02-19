@@ -2,6 +2,7 @@ package com.utochkin.kafkaproducerforsma.services.interfaces;
 
 
 import com.utochkin.kafkaproducerforsma.dto.PostDto;
+import com.utochkin.kafkaproducerforsma.models.Post;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,4 +19,6 @@ public interface PostService {
     Long deletePost(Long postId);
 
     List<PostDto> getFeedUser(Long userId, Pageable pageable);
+
+    List <Post> getAllPosts ();
 }

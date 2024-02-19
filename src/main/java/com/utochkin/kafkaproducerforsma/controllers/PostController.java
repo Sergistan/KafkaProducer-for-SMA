@@ -3,6 +3,7 @@ package com.utochkin.kafkaproducerforsma.controllers;
 
 import com.utochkin.kafkaproducerforsma.dto.PostDto;
 import com.utochkin.kafkaproducerforsma.dto.response.ErrorResponse;
+import com.utochkin.kafkaproducerforsma.models.Post;
 import com.utochkin.kafkaproducerforsma.services.interfaces.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -102,4 +104,14 @@ public class PostController {
         return new ResponseEntity<>(postService.getFeedUser(userId, paging), HttpStatus.OK);
     }
 
+    @GetMapping("/getAllPosts")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Получение всех постов из базы данных (Доступен только авторизованным пользователям с ролью ADMIN)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful get all posts from BD ", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Post.class)))),
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<?> getAllPosts() {
+        return new ResponseEntity<>(postService.getAllPosts(), HttpStatus.OK);
+    }
 }

@@ -132,6 +132,11 @@ public class PostServiceImpl implements PostService {
         return postMapper.toListDto(content);
     }
 
+    @Override
+    public List<Post> getAllPosts() {
+        return postRepository.findAll();
+    }
+
     @NotNull
     private String checkAndSaveImageAtMinioAndGetFilename(MultipartFile file) {
         try {

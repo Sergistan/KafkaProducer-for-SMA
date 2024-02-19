@@ -16,7 +16,7 @@ public interface UserService {
 
     void acceptFriendRequest(Long userIdFrom, Long userIdAccepted);
 
-    void refuseFriendRequest(Long userIdFrom, Long userIdRefused);
+    void refuseFriendRequest(Long userIdRefused, Long userIdFrom);
 
     void refuseFollower(Long userIdFollower, Long userId);
 

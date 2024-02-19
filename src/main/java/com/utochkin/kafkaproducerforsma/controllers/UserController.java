@@ -31,7 +31,8 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Friend request successful post", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 1 send friend request to user with id = 2"))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> createFriendRequest(@NotNull @RequestParam @Parameter(name = "userIdFrom", description = "ID пользователя отправляющего заявку <добавить в друзья>",
             in = ParameterIn.QUERY, example = "1") Long userIdFrom,
@@ -47,7 +48,8 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Friend successful accept friend request", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 2 accept friend request to user with id = 1"))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> acceptFriendRequest(@NotNull @RequestParam @Parameter(name = "userIdFrom", description = "ID пользователя отправляющего заявку <добавить в друзья>",
             in = ParameterIn.QUERY, example = "1") Long userIdFrom,
@@ -63,13 +65,14 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Friend request successful refuse", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 2 refused friend request to user with id = 1"))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<?> refuseFriendRequest(@NotNull @RequestParam @Parameter(name = "userIdFrom", description = "ID пользователя отправляющего заявку <добавить в друзья>",
-            in = ParameterIn.QUERY, example = "1") Long userIdFrom,
-                                                 @NotNull @RequestParam @Parameter(name = "userIdRefused", description = "ID пользователя отклонившего заявку <добавить в друзья>",
-                                                         in = ParameterIn.QUERY, example = "2") Long userIdRefused) {
-        userService.refuseFriendRequest(userIdFrom, userIdRefused);
+    public ResponseEntity<?> refuseFriendRequest(@NotNull @RequestParam @Parameter(name = "userIdRefused", description = "ID пользователя отклонившего заявку <добавить в друзья>",
+            in = ParameterIn.QUERY, example = "2") Long userIdRefused,
+                                                 @NotNull @RequestParam @Parameter(name = "userIdFrom", description = "ID пользователя отправляющего заявку <добавить в друзья>",
+            in = ParameterIn.QUERY, example = "1") Long userIdFrom) {
+        userService.refuseFriendRequest(userIdRefused, userIdFrom);
         return new ResponseEntity<>(String.format("User with id = %s refused friend request to user with id = %s",
                 userIdRefused, userIdFrom), HttpStatus.OK);
     }
@@ -79,7 +82,8 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Friend successful refuse follower", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 1 refused follower to user with id = 2"))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> refuseFollower(@NotNull @RequestParam @Parameter(name = "userIdFollower", description = "ID пользователя, который отказывается от подписки на другого пользователя",
             in = ParameterIn.QUERY, example = "1") Long userIdFollower,
@@ -95,7 +99,8 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Friend  successful delete friend", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 1 delete friend with id = 2"))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> deleteFriend(@NotNull @RequestParam @Parameter(name = "userId", description = "ID пользователя, который удаляет из друзей",
             in = ParameterIn.QUERY, example = "1") Long userId,
