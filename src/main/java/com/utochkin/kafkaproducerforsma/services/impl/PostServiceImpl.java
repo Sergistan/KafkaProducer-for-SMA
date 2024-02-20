@@ -82,12 +82,8 @@ public class PostServiceImpl implements PostService {
     @CachePut(value = "PostService::getPost", key = "#postId")
     @Override
     public PostDto updatePost(Long postId, PostDto postDto, MultipartFile file) {
+        Post post = checkAccessReturnPostId(postId);
         Post updatePost = postMapper.toEntity(postDto);
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
-        String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!name.equals(post.getUser().getName())) {
-            throw new AccessDeniedException("You can't change other people's posts");
-        }
 
         if (file == null) {
             updatePost.setImageName(null);
@@ -111,11 +107,7 @@ public class PostServiceImpl implements PostService {
     @CacheEvict(value = "PostService::getPost", key = "#postId")
     @Override
     public Long deletePost(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
-        String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!name.equals(post.getUser().getName())) {
-            throw new AccessDeniedException("You can't delete other people's posts");
-        }
+        Post post = checkAccessReturnPostId(postId);
         if (post.getImageName() != null) {
             deleteImage(post.getImageName());
         }
@@ -126,7 +118,7 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     @Override
     public List<PostDto> getFeedUser(Long userId, Pageable pageable) {
-        userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        checkAccessByUserId(userId);
         Page<Post> lastPostsFollowers = postRepository.getLastPostsFollowers(userId, pageable);
         List<Post> content = lastPostsFollowers.getContent();
         return postMapper.toListDto(content);
@@ -134,7 +126,32 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostDto> getAllPosts() {
+        checkAccessByAdmin();
         return postMapper.toListDto(postRepository.findAll());
+    }
+
+    public Post checkAccessReturnPostId(Long postId) throws AccessDeniedException, PostNotFoundException {
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!name.equals(post.getUser().getName())) {
+            throw new AccessDeniedException("Error: access denied!");
+        } else return post;
+    }
+
+    public void checkAccessByUserId(Long userId) throws AccessDeniedException, UserNotFoundException {
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!name.equals(user.getName())) {
+            throw new AccessDeniedException("Error: access denied!");
+        }
+    }
+
+    public void checkAccessByAdmin() throws AccessDeniedException {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<String> allNameAdmins = userRepository.getAllNameAdmins();
+        if (allNameAdmins.stream().noneMatch(x->x.equals(name))) {
+            throw new AccessDeniedException("Error: access denied!");
+        }
     }
 
     @NotNull
@@ -142,7 +159,7 @@ public class PostServiceImpl implements PostService {
         try {
             createBucket();
         } catch (Exception e) {
-            throw new BadInputDataException("Image upload failed1: " + e.getMessage());
+            throw new BadInputDataException("Image upload failed: " + e.getMessage());
         }
         if (!isValid(file)) {
             throw new BadInputDataException("Incorrect input file");
@@ -154,7 +171,7 @@ public class PostServiceImpl implements PostService {
             saveImage(inputStream, fileName);
             inputStream.close();
         } catch (Exception e) {
-            throw new BadInputDataException("Image upload failed2: " + e.getMessage());
+            throw new BadInputDataException("Image upload failed: " + e.getMessage());
         }
         return fileName;
     }

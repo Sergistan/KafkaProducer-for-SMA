@@ -34,15 +34,15 @@ public class ChatController {
     @Operation(summary = "Получение чата по id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful get chat", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ChatDto.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> getChat(@NotNull @RequestParam @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId) {
         return new ResponseEntity<>(chatService.getChatById(chatId), HttpStatus.OK);
     }
 
-    @GetMapping("/last_message/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Получение последнего сообщения в чате по id чата (Доступен только авторизованным пользователям с ролью ADMIN)")
+    @GetMapping("/last_message")
+    @Operation(summary = "Получение последнего сообщения в чате по id чата")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful get last message at chat", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("Last message at the chat: ***"))),
@@ -60,7 +60,8 @@ public class ChatController {
             @ApiResponse(responseCode = "201", description = "Successful create chat", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("Chat with id = 1 created between user with id = 1 and user with id = 2"))),
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> createChat(@RequestBody @Valid @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = ChatDto.class),
             encoding = @Encoding(name = "chatDto", contentType = "application/json")), description = "Ввод id первого и второго пользователей для создания чата между ними", required = true) ChatDto chatDto) {
@@ -73,7 +74,8 @@ public class ChatController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful delete chat", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("Chat with id = 1 deleted!"))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> deleteChat(@NotNull @RequestParam @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId) {
         chatService.deleteChatById(chatId);
@@ -86,7 +88,8 @@ public class ChatController {
             @ApiResponse(responseCode = "202", description = "Successful join into chat", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 1 join to chat with id = 1"))),
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> joinChat(@NotNull @RequestParam(value = "chatId") @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId,
                                       @NotNull @RequestParam(value = "userId") @Parameter(name = "userId", description = "ID пользователя", in = ParameterIn.QUERY, example = "1") Long userId) {
@@ -99,7 +102,8 @@ public class ChatController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Successful leave from chat", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 1 leave to chat with id = 1"))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> leaveChat(@NotNull @RequestParam(value = "chatId") @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId,
                                        @NotNull @RequestParam(value = "userId") @Parameter(name = "userId", description = "ID пользователя", in = ParameterIn.QUERY, example = "1") Long userId) {

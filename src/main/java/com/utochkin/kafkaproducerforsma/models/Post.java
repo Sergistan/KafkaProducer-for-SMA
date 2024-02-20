@@ -35,8 +35,6 @@ public class Post implements Serializable {
     @Column(name = "image_name")
     private String imageName;
 
-    @Schema(description = "Дата и время создания(изменения) поста", example = "2024-01-12 13:56", type = "string", pattern = "yyyy-MM-dd HH:mm",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
     @Column(name = "created_at")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime createdAt;

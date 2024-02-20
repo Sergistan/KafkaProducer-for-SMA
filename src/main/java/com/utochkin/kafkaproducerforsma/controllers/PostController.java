@@ -90,7 +90,8 @@ public class PostController {
     @Operation(summary = "Получение постов (ленты активности) от пользователей на которых подписан пользователь")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful get last posts followers ", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PostDto.class)))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> getFeedUser(@NotNull @RequestParam @Parameter(name = "userId", description = "ID пользователя", in = ParameterIn.QUERY, example = "1") Long userId,
                                          @NotNull @RequestParam(defaultValue = "0") @Parameter(name = "page", description = "ID пользователя для которого будет отображена лента активности",
@@ -108,8 +109,9 @@ public class PostController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Получение всех постов из базы данных (Доступен только авторизованным пользователям с ролью ADMIN)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful get all posts from BD ", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PostDto.class)))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "200", description = "Successful get all posts from BD", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PostDto.class)))),
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> getAllPosts() {
         return new ResponseEntity<>(postService.getAllPosts(), HttpStatus.OK);

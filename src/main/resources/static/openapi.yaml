@@ -95,6 +95,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/post/create:
     post:
@@ -186,6 +192,36 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
 
+  /api/v1/post/getAllPosts:
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Post endpoints
+      summary: "Получение всех постов из базы данных (Доступен только авторизованным пользователям с ролью ADMIN)"
+      operationId: getAllPosts
+      responses:
+        '200':
+          description: Successful get all posts from BD
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostDto'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/post/delete:
     delete:
       security:
@@ -255,14 +291,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/chat/last_message/admin:
+  /api/v1/chat/last_message:
     get:
       security:
         - bearerAuth: [ ]
       tags:
         - Chat endpoints
-      summary: "Получение последнего сообщения в чате по id чата (Доступен только авторизованным пользователям с ролью ADMIN)"
+      summary: "Получение последнего сообщения в чате по id чата"
       operationId: getLastMessageFromChat
       parameters:
         - name: chatId
@@ -329,6 +371,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/chat/join:
     put:
@@ -375,6 +423,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/chat/leave:
     put:
@@ -415,6 +469,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/chat/delete:
     delete:
@@ -443,6 +503,12 @@ paths:
                 example: "Chat with id = 1 deleted!"
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
           content:
             application/json:
               schema:
@@ -488,6 +554,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/user/acceptFriendRequest:
     post:
@@ -524,6 +596,12 @@ paths:
                 example: "User with id = 2 accept friend request to user with id = 1"
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -568,6 +646,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/user/refuseFollower:
     post:
@@ -608,6 +692,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/user/deleteFriend:
     delete:
@@ -644,6 +734,12 @@ paths:
                 example: "User with id = 1 delete friend with id = 2"
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:

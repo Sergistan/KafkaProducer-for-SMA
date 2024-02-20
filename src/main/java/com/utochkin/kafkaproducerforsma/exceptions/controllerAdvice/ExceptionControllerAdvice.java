@@ -1,6 +1,5 @@
 package com.utochkin.kafkaproducerforsma.exceptions.controllerAdvice;
 
-
 import com.utochkin.kafkaproducerforsma.dto.response.ErrorResponse;
 import com.utochkin.kafkaproducerforsma.exceptions.*;
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
@@ -8,8 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-
 
 @RestControllerAdvice
 public class ExceptionControllerAdvice {

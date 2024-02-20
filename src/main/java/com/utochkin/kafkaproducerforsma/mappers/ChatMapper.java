@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface ChatMapper {
     @Mapping(target = "messages" , ignore = true)
     Chat toChat(ChatDto chatDto);
+
     @Mapping(target = "firstUserId" , ignore = true)
     @Mapping(target = "secondUserId" , ignore = true)
     ChatDto toDto (Chat chat);

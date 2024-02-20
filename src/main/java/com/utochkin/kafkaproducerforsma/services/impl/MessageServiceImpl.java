@@ -40,19 +40,17 @@ public class MessageServiceImpl implements MessageService {
                 userService.findByName(messageDto.getSenderName()),
                 chatMapper.toChat(chatService.getChatById(messageDto.getChatId())))
         );
-        Chat chat = message.getChat();
-        chat.setLastMessage(messageRepository.getLastMessageFromChat(messageDto.getChatId()));
-        chatRepository.save(chat);
+        setAndSaveLastMessageAtChatById(messageDto.getChatId());
+
         return messageMapper.toMessageDto(message);
     }
 
     @Override
     public MessageDeleteIdRequest deleteById(MessageDeleteIdRequest messageDeleteIdRequest) {
         messageRepository.deleteById(messageDeleteIdRequest.getIdMessage());
-        Chat chat = chatRepository.findById(messageDeleteIdRequest.getIdChat()).orElseThrow(ChatNotFoundException::new);
-        String lastMessageFromChat = messageRepository.getLastMessageFromChat(messageDeleteIdRequest.getIdChat());
-        chat.setLastMessage(lastMessageFromChat);
-        chatRepository.save(chat);
+
+        setAndSaveLastMessageAtChatById(messageDeleteIdRequest.getIdChat());
+
         log.info("Message with id = {} deleted.", messageDeleteIdRequest.getIdMessage());
         return new MessageDeleteIdRequest(messageDeleteIdRequest.getIdMessage(),
                 messageDeleteIdRequest.getIdChat(),
@@ -65,10 +63,7 @@ public class MessageServiceImpl implements MessageService {
         Message updateMessage = messageMapper.update(message, updateMessageDto);
         messageRepository.save(updateMessage);
 
-        Chat chat = chatRepository.findById(updateMessageDto.getChatId()).orElseThrow(ChatNotFoundException::new);
-        String lastMessageFromChat = messageRepository.getLastMessageFromChat(updateMessageDto.getChatId());
-        chat.setLastMessage(lastMessageFromChat);
-        chatRepository.save(chat);
+        setAndSaveLastMessageAtChatById(updateMessageDto.getChatId());
 
         log.info("Message with id = {} updated.", updateMessage.getId());
         UpdateMessageDto updateMessageDtoAfterSave = messageMapper.toUpdateMessageDto(updateMessage);
@@ -77,4 +72,9 @@ public class MessageServiceImpl implements MessageService {
         return updateMessageDtoAfterSave;
     }
 
+    void setAndSaveLastMessageAtChatById(Long chatId){
+        Chat chat = chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
+        chat.setLastMessage(messageRepository.getLastMessageFromChat(chatId));
+        chatRepository.save(chat);
+    }
 }

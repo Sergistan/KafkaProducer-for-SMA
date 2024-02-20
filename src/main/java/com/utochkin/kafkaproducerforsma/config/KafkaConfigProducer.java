@@ -19,10 +19,7 @@ public class KafkaConfigProducer {
                 .name("topic-notification-user")
                 .partitions(3)
                 .replicas(1)
-                .config(
-                        TopicConfig.RETENTION_MS_CONFIG,
-                        String.valueOf(Duration.ofDays(7).toMillis())
-                )
+                .config(TopicConfig.RETENTION_MS_CONFIG, String.valueOf(Duration.ofDays(7).toMillis()))
                 .build();
     }
 

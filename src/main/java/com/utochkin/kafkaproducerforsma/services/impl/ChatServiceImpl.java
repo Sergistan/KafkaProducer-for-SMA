@@ -1,18 +1,22 @@
 package com.utochkin.kafkaproducerforsma.services.impl;
 
 import com.utochkin.kafkaproducerforsma.dto.ChatDto;
+import com.utochkin.kafkaproducerforsma.exceptions.AccessDeniedException;
 import com.utochkin.kafkaproducerforsma.exceptions.BadInputDataException;
 import com.utochkin.kafkaproducerforsma.exceptions.ChatNotFoundException;
+import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.mappers.ChatMapper;
 import com.utochkin.kafkaproducerforsma.models.Chat;
 import com.utochkin.kafkaproducerforsma.models.User;
 import com.utochkin.kafkaproducerforsma.repository.ChatRepository;
 import com.utochkin.kafkaproducerforsma.repository.MessageRepository;
+import com.utochkin.kafkaproducerforsma.repository.UserRepository;
 import com.utochkin.kafkaproducerforsma.services.interfaces.ChatService;
 import com.utochkin.kafkaproducerforsma.services.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +32,7 @@ public class ChatServiceImpl implements ChatService {
     private final MessageRepository messageRepository;
     private final ChatMapper chatMapper;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     @Cacheable(value = "ChatService::getChatById", key = "#chatId")
@@ -35,7 +40,7 @@ public class ChatServiceImpl implements ChatService {
     public ChatDto getChatById(Long chatId) {
         Chat chatById = chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
         ChatDto chatDto = chatMapper.toDto(chatById);
-
+        checkAccessByChatDto(chatDto);
         chatDto.setLastMessage(getLastMessage(chatId));
 
         List<Long> collect = chatById.getUsers().stream().map(User::getId).takeWhile(Objects::nonNull).toList();
@@ -51,9 +56,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDto createChat(ChatDto chatDto) {
-
-        var firstUser = userService.getById(chatDto.getFirstUserId());
-        var secondUser = userService.getById(chatDto.getSecondUserId());
+        checkAccessByChatDto(chatDto);
+        User firstUser = userService.getById(chatDto.getFirstUserId());
+        User secondUser = userService.getById(chatDto.getSecondUserId());
 
         if (!firstUser.getFriends().contains(secondUser)) {
             throw new BadInputDataException("These users can't have a chat");
@@ -83,6 +88,7 @@ public class ChatServiceImpl implements ChatService {
     @CacheEvict(value = "ChatService::getChatById", key = "#chatId")
     @Override
     public void deleteChatById(Long chatId) {
+        checkAccessByChatId(chatId);
         chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
         chatRepository.deleteById(chatId);
     }
@@ -90,8 +96,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void joinChat(Long userId, Long chatId) {
-        var user = userService.getById(userId);
-        var chatDto = getChatById(chatId);
+        User user = userService.getById(userId);
+        ChatDto chatDto = getChatById(chatId);
+        checkAccessByChatDto(chatDto);
         Chat chat = chatMapper.toChat(chatDto);
 
         Optional<User> oneManChat = chat.getUsers().stream().findFirst();
@@ -107,9 +114,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void leaveChat(Long userId, Long chatId) {
-
-        var user = userService.getById(userId);
-        var chatDto = getChatById(chatId);
+        User user = userService.getById(userId);
+        ChatDto chatDto = getChatById(chatId);
+        checkAccessByChatDto(chatDto);
         Chat chat = chatMapper.toChat(chatDto);
 
         chat.getUsers().remove(user);
@@ -120,8 +127,27 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     @Override
     public String getLastMessage(Long chatId) {
-        chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
+        checkAccessByChatId(chatId);
         return messageRepository.getLastMessageFromChat(chatId);
     }
 
+    public void checkAccessByChatDto(ChatDto chatDto) throws AccessDeniedException, UserNotFoundException {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        Long firstUserId = chatDto.getFirstUserId();
+        User firstUser = userRepository.findById(firstUserId).orElseThrow(UserNotFoundException::new);
+        Long secondUserId = chatDto.getSecondUserId();
+        User secondUser = userRepository.findById(secondUserId).orElseThrow(UserNotFoundException::new);
+        if (!name.equals(firstUser.getName()) || !name.equals(secondUser.getName())) {
+            throw new AccessDeniedException("Error: access denied!");
+        }
+    }
+
+    public void checkAccessByChatId(Long chatId) throws AccessDeniedException, ChatNotFoundException {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        Chat chat = chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
+        Set<User> users = chat.getUsers();
+        if (users.stream().map(User::getName).noneMatch(x->x.equals(name))) {
+            throw new AccessDeniedException("Error: access denied!");
+        }
+    }
 }
