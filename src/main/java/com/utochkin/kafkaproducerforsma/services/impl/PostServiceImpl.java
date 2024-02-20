@@ -133,8 +133,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+    public List<PostDto> getAllPosts() {
+        return postMapper.toListDto(postRepository.findAll());
     }
 
     @NotNull

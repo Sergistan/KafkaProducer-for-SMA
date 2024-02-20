@@ -1,1 +1,0 @@
-ALTER TABLE posts ALTER COLUMN image_name TYPE text;

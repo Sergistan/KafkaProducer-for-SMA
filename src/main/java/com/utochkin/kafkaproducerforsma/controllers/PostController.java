@@ -108,7 +108,7 @@ public class PostController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Получение всех постов из базы данных (Доступен только авторизованным пользователям с ролью ADMIN)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful get all posts from BD ", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Post.class)))),
+            @ApiResponse(responseCode = "200", description = "Successful get all posts from BD ", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PostDto.class)))),
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> getAllPosts() {

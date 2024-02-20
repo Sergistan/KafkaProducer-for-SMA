@@ -23,12 +23,3 @@ databaseChangeLog:
   - include:
       file: /tables/create_users.sql
       relativeToChangeLogFile: true
-  - include:
-      file: /tables/chahge_data_type_image_name_column.sql
-      relativeToChangeLogFile: true
-  - include:
-      file: /tables/change-all-varchar_posts.sql
-      relativeToChangeLogFile: true
-  - include:
-      file: /tables/change-all-varchar_2024.sql
-      relativeToChangeLogFile: true
