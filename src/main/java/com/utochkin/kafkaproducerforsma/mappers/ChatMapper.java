@@ -6,6 +6,8 @@ import com.utochkin.kafkaproducerforsma.models.Chat;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface ChatMapper {
     @Mapping(target = "messages" , ignore = true)
@@ -14,4 +16,6 @@ public interface ChatMapper {
     @Mapping(target = "firstUserId" , ignore = true)
     @Mapping(target = "secondUserId" , ignore = true)
     ChatDto toDto (Chat chat);
+
+    List<ChatDto> toListDto(List<Chat> chats);
 }

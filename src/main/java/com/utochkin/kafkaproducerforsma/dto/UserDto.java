@@ -17,6 +17,10 @@ import java.io.Serializable;
 @Schema(description = "UserDto request/response")
 public class UserDto implements Serializable {
 
+    @Schema(description = "Id пользователя", example = "1", type = "integer", requiredMode = Schema.RequiredMode.NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long id;
+
     @Schema(description = "Имя пользователя", example = "Sergey", type = "string")
     @NotNull(message = "Name must be not null.")
     @Length(max = 255, message = "Name length must be smaller than 255 symbols.")

@@ -6,6 +6,7 @@ import com.utochkin.kafkaproducerforsma.dto.UpdateMessageDto;
 import com.utochkin.kafkaproducerforsma.dto.request.MessageDeleteIdRequest;
 import com.utochkin.kafkaproducerforsma.exceptions.ChatNotFoundException;
 import com.utochkin.kafkaproducerforsma.exceptions.MessageNotFoundException;
+import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.mappers.ChatMapper;
 import com.utochkin.kafkaproducerforsma.mappers.MessageMapper;
 import com.utochkin.kafkaproducerforsma.models.Chat;

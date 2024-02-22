@@ -17,7 +17,7 @@ public interface PostService {
 
     Long deletePost(Long postId);
 
-    List<PostDto> getFeedUser(Long userId, Pageable pageable);
+    List<PostDto> getFeedUser(Pageable paging);
 
     List <PostDto> getAllPosts ();
 }

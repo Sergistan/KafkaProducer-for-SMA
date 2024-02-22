@@ -1,10 +1,12 @@
 package com.utochkin.kafkaproducerforsma.services.impl;
 
 import com.utochkin.kafkaproducerforsma.dto.UserDto;
-import com.utochkin.kafkaproducerforsma.exceptions.*;
+import com.utochkin.kafkaproducerforsma.exceptions.AccessDeniedException;
+import com.utochkin.kafkaproducerforsma.exceptions.BadInputDataException;
+import com.utochkin.kafkaproducerforsma.exceptions.ChatNotFoundException;
+import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.mappers.UserMapper;
 import com.utochkin.kafkaproducerforsma.models.Chat;
-import com.utochkin.kafkaproducerforsma.models.Role;
 import com.utochkin.kafkaproducerforsma.models.User;
 import com.utochkin.kafkaproducerforsma.repository.UserRepository;
 import com.utochkin.kafkaproducerforsma.services.interfaces.UserService;
@@ -15,7 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
@@ -43,75 +46,135 @@ public class UserServiceImpl implements UserService {
     public User createUser(UserDto userDto) {
         User user = userMapper.toEntity(userDto);
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        user.setRole(Role.ROLE_USER);
         return userRepository.save(user);
     }
 
     @Override
-    public void createFriendRequest(Long userIdFrom, Long userIdTo) {
-        User userFrom = checkAccess(userIdFrom);
+    public Long createFriendRequest(Long userIdTo) {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User userFrom = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+        checkingTheRequestToYourself(userFrom, userIdTo);
+
         User userTo = userRepository.findById(userIdTo).orElseThrow(UserNotFoundException::new);
         if (userFrom.getFriends().contains(userTo)) {
-            throw new BadInputDataException(String.format("User with id = %s already have friend with id = %s", userIdFrom, userIdTo));
+            throw new BadInputDataException(String.format("User with id = %s already have friend with id = %s", userFrom.getId(), userIdTo));
         }
         userTo.addFollower(userFrom);
+        return userFrom.getId();
     }
 
+
     @Override
-    public void acceptFriendRequest(Long userIdFrom, Long userIdAccepted) {
-        User userFrom = checkAccess(userIdFrom);
-        User userAcceptedRequest = userRepository.findById(userIdAccepted).orElseThrow(UserNotFoundException::new);
-        if (userFrom.getFriends().contains(userAcceptedRequest)) {
-            throw new BadInputDataException(String.format("User with id = %s already friend with id = %s", userIdFrom, userIdAccepted));
+    public Long acceptFriendRequest(Long userIdSendedRequest) {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User userAccepted = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+        checkingTheRequestToYourself(userAccepted, userIdSendedRequest);
+
+        User userSendedRequest = userRepository.findById(userIdSendedRequest).orElseThrow(UserNotFoundException::new);
+        if (userAccepted.getFriends().contains(userSendedRequest)) {
+            throw new BadInputDataException(String.format("User with id = %s already friend with id = %s", userAccepted.getId(), userIdSendedRequest));
         }
-        userAcceptedRequest.addFriend(userFrom);
-        userFrom.addFollower(userAcceptedRequest);
+        userAccepted.addFriend(userSendedRequest);
+        userSendedRequest.addFollower(userAccepted);
+        return userAccepted.getId();
     }
 
     @Override
-    public void refuseFriendRequest(Long userIdRefused, Long userIdFrom) {
-        User userRefusedRequest = checkAccess(userIdRefused);
-        User userFrom = userRepository.findById(userIdFrom).orElseThrow(UserNotFoundException::new);
-        if (userFrom.getFriends().contains(userRefusedRequest)) {
-            throw new BadInputDataException(String.format("User with id = %s already accept friend request user with id = %s", userIdFrom, userIdRefused));
+    public Long refuseFriendRequest(Long userIdSendedRequest) {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User userRefusedRequest = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+        checkingTheRequestToYourself(userRefusedRequest, userIdSendedRequest);
+
+        User userSendedRequest = userRepository.findById(userIdSendedRequest).orElseThrow(UserNotFoundException::new);
+        if (userSendedRequest.getFriends().contains(userRefusedRequest)) {
+            throw new BadInputDataException(String.format("User with id = %s already accept friend request user with id = %s", userRefusedRequest.getId(), userIdSendedRequest));
         }
-        userRefusedRequest.addFollower(userFrom);
+        userRefusedRequest.addFollower(userSendedRequest);
+        return userRefusedRequest.getId();
     }
 
     @Override
-    public void refuseFollower(Long userIdFollower, Long userId) {
-        User follower = checkAccess(userIdFollower);
+    public Long refuseFollower(Long userId) {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User userRefused = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+        checkingTheRequestToYourself(userRefused, userId);
+
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-        if (!user.getFollowers().contains(follower)) {
-            throw new BadInputDataException(String.format("User with id = %s not have follower with id = %s", userId, userIdFollower));
+        if (!user.getFollowers().contains(userRefused)) {
+            throw new BadInputDataException(String.format("User with id = %s not have follower with id = %s", userId, userRefused.getId()));
         }
-        user.deleteFollower(follower);
+        user.deleteFollower(userRefused);
+        return userRefused.getId();
     }
 
     @Override
-    public void deleteFriend(Long userId, Long userIdDeleted) {
-        User user = checkAccess(userId);
+    public Long deleteFriend(Long userIdDeleted) {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+        checkingTheRequestToYourself(user, userIdDeleted);
+
         User userDeleted = userRepository.findById(userIdDeleted).orElseThrow(UserNotFoundException::new);
         if (!user.getFriends().contains(userDeleted)) {
-            throw new BadInputDataException(String.format("User with id = %s not have friend with id = %s", userId, userIdDeleted));
+            throw new BadInputDataException(String.format("User with id = %s not have friend with id = %s", user.getId(), userIdDeleted));
         }
         user.deleteFriend(userDeleted);
         user.deleteFollower(userDeleted);
 
         if (user.getChats().stream()
-                .anyMatch(chat -> userDeleted.getChats().contains(chat))){
+                .anyMatch(chat -> userDeleted.getChats().contains(chat))) {
             Chat chat = user.getChats().stream().filter(x -> x.getUsers().contains(userDeleted)).findFirst().orElseThrow(ChatNotFoundException::new);
             chatService.deleteChatById(chat.getId());
         }
+        return user.getId();
     }
 
-    public User checkAccess (Long userId) throws AccessDeniedException, UserNotFoundException {
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserDto> getAllUsers() {
+        checkAccessByAdmin();
+        return userMapper.toListDto(userRepository.findAll());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Long getIdUser(String username) {
+        User user = userRepository.findByName(username).orElseThrow(UserNotFoundException::new);
+        return user.getId();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserDto> getAllUsersFriends() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<User> userCredential = userRepository.findByName(name);
-        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-        if  (userCredential.isPresent() && !user.equals(userCredential.get())){
-            throw new AccessDeniedException("Error: access denied!");
-        } else return user;
+        User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+        if (!user.getFriends().isEmpty()){
+            return userMapper.toListDto(user.getFriends().stream().toList());
+        }
+        return Collections.emptyList();
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserDto> getAllUsersFollowers() {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+        if (!user.getFollowers().isEmpty()){
+            return userMapper.toListDto(user.getFollowers().stream().toList());
+        }
+        return Collections.emptyList();
+    }
+
+    public void checkAccessByAdmin() throws AccessDeniedException {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<String> allNameAdmins = userRepository.getAllNameAdmins();
+        if (allNameAdmins.stream().noneMatch(x -> x.equals(name))) {
+            throw new AccessDeniedException("Error: access denied!");
+        }
+    }
+
+    private void checkingTheRequestToYourself(User user, Long userIdRequest) {
+        if (user.getId().equals(userIdRequest)) {
+            throw new BadInputDataException("You can't send a request to yourself");
+        }
+    }
 }

@@ -56,7 +56,8 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> register(@RequestBody @Valid @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = UserDto.class),
-            encoding = @Encoding(name = "userDto", contentType = "application/json")), description = "Ввод имени, пароля и электронной почты для регистрации пользователя", required = true) UserDto userDto) {
+            encoding = @Encoding(name = "userDto", contentType = "application/json")), description = "Ввод имени, пароля и электронной почты для регистрации пользователя (Имя должно быть уникальным)",
+            required = true) UserDto userDto) {
         User createdUser = userService.createUser(userDto);
         UserDto userDtoCreated = userMapper.toDto(createdUser);
         return new ResponseEntity<>(userDtoCreated, HttpStatus.OK);
@@ -71,7 +72,7 @@ public class AuthController {
     })
     public ResponseEntity<?> refresh(@NotNull @RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = String.class),
             examples = @ExampleObject("$2a$12$5lWa/FKZ925t3p.QDvj/oeo38ot7Lna9vhhiCYCOBv8YV0h2uN/5q"), encoding = @Encoding(name = "refreshToken", contentType = "application/json")),
-            description = "Обновление токена аутентификации и токена обновления", required = true)  String refreshToken) {
+            description = "Обновление токена аутентификации и токена обновления (необходимо ввести текущий refreshToken)", required = true)  String refreshToken) {
         JwtResponse refresh = authService.refresh(refreshToken);
         return new ResponseEntity<>(refresh, HttpStatus.OK);
     }

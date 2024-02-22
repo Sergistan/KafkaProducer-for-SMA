@@ -2,15 +2,13 @@ package com.utochkin.kafkaproducerforsma.controllers;
 
 
 import com.utochkin.kafkaproducerforsma.dto.ChatDto;
+import com.utochkin.kafkaproducerforsma.dto.UserDto;
 import com.utochkin.kafkaproducerforsma.dto.response.ErrorResponse;
 import com.utochkin.kafkaproducerforsma.services.interfaces.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.*;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -83,7 +81,7 @@ public class ChatController {
     }
 
     @PutMapping("/join")
-    @Operation(summary = "Присоединение к чату по id чата и по id пользователя")
+    @Operation(summary = "Присоединение к чату")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Successful join into chat", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 1 join to chat with id = 1"))),
@@ -91,24 +89,33 @@ public class ChatController {
             @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<?> joinChat(@NotNull @RequestParam(value = "chatId") @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId,
-                                      @NotNull @RequestParam(value = "userId") @Parameter(name = "userId", description = "ID пользователя", in = ParameterIn.QUERY, example = "1") Long userId) {
-        chatService.joinChat(userId, chatId);
+    public ResponseEntity<?> joinChat(@NotNull @RequestParam(value = "chatId") @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId) {
+        Long userId =  chatService.joinChat(chatId);
         return new ResponseEntity<>(String.format("User with id = %s join to chat with id = %s", userId, chatId), HttpStatus.ACCEPTED);
     }
 
     @PutMapping("/leave")
-    @Operation(summary = "Отключение от чата по id чата и по id пользователя")
+    @Operation(summary = "Отключение от чата")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Successful leave from chat", content = @Content(schema = @Schema(implementation = String.class),
                     examples = @ExampleObject("User with id = 1 leave to chat with id = 1"))),
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<?> leaveChat(@NotNull @RequestParam(value = "chatId") @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId,
-                                       @NotNull @RequestParam(value = "userId") @Parameter(name = "userId", description = "ID пользователя", in = ParameterIn.QUERY, example = "1") Long userId) {
-        chatService.leaveChat(userId, chatId);
+    public ResponseEntity<?> leaveChat(@NotNull @RequestParam(value = "chatId") @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId) {
+        Long userId = chatService.leaveChat(chatId);
         return new ResponseEntity<>(String.format("User with id = %s leave to chat with id = %s", userId, chatId), HttpStatus.ACCEPTED);
     }
 
+    @GetMapping("/getAllChats")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Получение всех существующих чатов между пользователями (Доступен только авторизованным пользователям с ролью ADMIN)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful get all chats from BD", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ChatDto.class)))),
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<?> getAllChats() {
+        return new ResponseEntity<>(chatService.getAllChats(), HttpStatus.OK);
+    }
 }

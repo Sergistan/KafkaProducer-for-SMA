@@ -93,16 +93,15 @@ public class PostController {
             @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<?> getFeedUser(@NotNull @RequestParam @Parameter(name = "userId", description = "ID пользователя", in = ParameterIn.QUERY, example = "1") Long userId,
-                                         @NotNull @RequestParam(defaultValue = "0") @Parameter(name = "page", description = "ID пользователя для которого будет отображена лента активности",
+    public ResponseEntity<?> getFeedUser(@NotNull @RequestParam(defaultValue = "0") @Parameter(name = "page", description = "Номер отображаемой страницы ленты активности (начинается с 0)",
                                                  in = ParameterIn.QUERY, example = "0") int page,
-                                         @NotNull @RequestParam(defaultValue = "2") @Parameter(name = "size", description = "Номер отображаемой страницы ленты активности (начинается с 0)",
+                                         @NotNull @RequestParam(defaultValue = "2") @Parameter(name = "size", description = "Размер отображаемой страницы ленты активности (начинается с 0)",
                                                  in = ParameterIn.QUERY, example = "2") int size,
                                          @NotNull @RequestParam(defaultValue = "true") @Parameter(name = "isSortAsDesk", description = "Сортировка по времени публикации постов (true - по убыванию, false - по возрастанию)",
                                                  in = ParameterIn.QUERY, example = "true") boolean isSortAsDesk) {
         Sort sortByCreatedAt = isSortAsDesk ? Sort.by("created_at").descending() : Sort.by("created_at");
         Pageable paging = PageRequest.of(page, size, sortByCreatedAt);
-        return new ResponseEntity<>(postService.getFeedUser(userId, paging), HttpStatus.OK);
+        return new ResponseEntity<>(postService.getFeedUser(paging), HttpStatus.OK);
     }
 
     @GetMapping("/getAllPosts")

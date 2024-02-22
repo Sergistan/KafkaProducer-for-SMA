@@ -119,6 +119,8 @@ public class AppConfig {
                         configurer.requestMatchers("/api/v1/auth/**", "/start/**", "/ws/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/*")
                                 .permitAll()
                                 .requestMatchers("/api/v1/post/getAllPosts").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/user/getAllUsers").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/user/getAllChats").hasRole("ADMIN")
                                 .anyRequest().authenticated())
                 .addFilterBefore(new JwtTokenFilter(tokenProvider),
                         UsernamePasswordAuthenticationFilter.class);

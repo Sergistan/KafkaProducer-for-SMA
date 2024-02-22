@@ -21,7 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -95,33 +98,37 @@ public class ChatServiceImpl implements ChatService {
 
 
     @Override
-    public void joinChat(Long userId, Long chatId) {
-        User user = userService.getById(userId);
+    public Long joinChat(Long chatId) {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+
         ChatDto chatDto = getChatById(chatId);
-        checkAccessByChatDto(chatDto);
         Chat chat = chatMapper.toChat(chatDto);
 
-        Optional<User> oneManChat = chat.getUsers().stream().findFirst();
+        User oneManChat = chat.getUsers().stream().findFirst().orElseThrow(UserNotFoundException::new);
 
-        if (oneManChat.isPresent() && !oneManChat.get().getFriends().contains(user)) {
+        if (!oneManChat.getFriends().contains(user)) {
             throw new BadInputDataException("This user can't join in this chat");
         }
 
         chat.getUsers().add(user);
 
         chatRepository.save(chat);
+        return user.getId();
     }
 
     @Override
-    public void leaveChat(Long userId, Long chatId) {
-        User user = userService.getById(userId);
+    public Long leaveChat(Long chatId) {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+
         ChatDto chatDto = getChatById(chatId);
-        checkAccessByChatDto(chatDto);
         Chat chat = chatMapper.toChat(chatDto);
 
         chat.getUsers().remove(user);
 
         chatRepository.save(chat);
+        return user.getId();
     }
 
     @Transactional(readOnly = true)
@@ -129,6 +136,12 @@ public class ChatServiceImpl implements ChatService {
     public String getLastMessage(Long chatId) {
         checkAccessByChatId(chatId);
         return messageRepository.getLastMessageFromChat(chatId);
+    }
+    @Transactional(readOnly = true)
+    @Override
+    public List<ChatDto> getAllChats() {
+        checkAccessByAdmin();
+        return chatMapper.toListDto(chatRepository.findAll());
     }
 
     public void checkAccessByChatDto(ChatDto chatDto) throws AccessDeniedException, UserNotFoundException {
@@ -146,7 +159,15 @@ public class ChatServiceImpl implements ChatService {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         Chat chat = chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
         Set<User> users = chat.getUsers();
-        if (users.stream().map(User::getName).noneMatch(x->x.equals(name))) {
+        if (users.stream().map(User::getName).noneMatch(x -> x.equals(name))) {
+            throw new AccessDeniedException("Error: access denied!");
+        }
+    }
+
+    public void checkAccessByAdmin() throws AccessDeniedException {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<String> allNameAdmins = userRepository.getAllNameAdmins();
+        if (allNameAdmins.stream().noneMatch(x -> x.equals(name))) {
             throw new AccessDeniedException("Error: access denied!");
         }
     }

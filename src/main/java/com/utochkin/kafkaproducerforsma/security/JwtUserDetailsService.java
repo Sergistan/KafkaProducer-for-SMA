@@ -1,6 +1,7 @@
 package com.utochkin.kafkaproducerforsma.security;
 
 
+import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.models.User;
 import com.utochkin.kafkaproducerforsma.services.interfaces.UserService;
 import lombok.RequiredArgsConstructor;

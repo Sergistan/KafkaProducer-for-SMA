@@ -1,6 +1,5 @@
 package com.utochkin.kafkaproducerforsma.services.impl;
 
-import com.utochkin.kafkaproducerforsma.props.MinioProperties;
 import com.utochkin.kafkaproducerforsma.dto.PostDto;
 import com.utochkin.kafkaproducerforsma.exceptions.AccessDeniedException;
 import com.utochkin.kafkaproducerforsma.exceptions.BadInputDataException;
@@ -9,6 +8,7 @@ import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.mappers.PostMapper;
 import com.utochkin.kafkaproducerforsma.models.Post;
 import com.utochkin.kafkaproducerforsma.models.User;
+import com.utochkin.kafkaproducerforsma.props.MinioProperties;
 import com.utochkin.kafkaproducerforsma.repository.PostRepository;
 import com.utochkin.kafkaproducerforsma.repository.UserRepository;
 import com.utochkin.kafkaproducerforsma.services.interfaces.PostService;
@@ -61,7 +61,6 @@ public class PostServiceImpl implements PostService {
             createdPost.setImageLink(getUrlImage(fileName));
         }
 
-        createdPost.setCreatedAt(LocalDateTime.now());
         createdPost.setUser(user);
         postRepository.save(createdPost);
         PostDto savedPostDto = postMapper.toDto(createdPost);
@@ -98,7 +97,6 @@ public class PostServiceImpl implements PostService {
             deleteImage(post.getImageName());
         }
         updatePost.setId(postId);
-        updatePost.setCreatedAt(LocalDateTime.now());
         updatePost.setUser(post.getUser());
         postRepository.save(updatePost);
         return postMapper.toDto(updatePost);
@@ -117,13 +115,14 @@ public class PostServiceImpl implements PostService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<PostDto> getFeedUser(Long userId, Pageable pageable) {
-        checkAccessByUserId(userId);
-        Page<Post> lastPostsFollowers = postRepository.getLastPostsFollowers(userId, pageable);
+    public List<PostDto> getFeedUser(Pageable pageable) {
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
+        Page<Post> lastPostsFollowers = postRepository.getLastPostsFollowers(user.getId(), pageable);
         List<Post> content = lastPostsFollowers.getContent();
         return postMapper.toListDto(content);
     }
-
+    @Transactional(readOnly = true)
     @Override
     public List<PostDto> getAllPosts() {
         checkAccessByAdmin();
@@ -136,14 +135,6 @@ public class PostServiceImpl implements PostService {
         if (!name.equals(post.getUser().getName())) {
             throw new AccessDeniedException("Error: access denied!");
         } else return post;
-    }
-
-    public void checkAccessByUserId(Long userId) throws AccessDeniedException, UserNotFoundException {
-        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-        String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!name.equals(user.getName())) {
-            throw new AccessDeniedException("Error: access denied!");
-        }
     }
 
     public void checkAccessByAdmin() throws AccessDeniedException {

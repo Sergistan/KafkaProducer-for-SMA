@@ -4,6 +4,9 @@ package com.utochkin.kafkaproducerforsma.services.interfaces;
 import com.utochkin.kafkaproducerforsma.dto.UserDto;
 import com.utochkin.kafkaproducerforsma.models.User;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface UserService {
 
     User findByName(String name);
@@ -12,13 +15,21 @@ public interface UserService {
 
     User createUser(UserDto userDto);
 
-    void createFriendRequest(Long userIdFrom, Long userIdTo);
+    Long createFriendRequest(Long userIdTo);
 
-    void acceptFriendRequest(Long userIdFrom, Long userIdAccepted);
+    Long acceptFriendRequest(Long userIdSendedRequest);
 
-    void refuseFriendRequest(Long userIdRefused, Long userIdFrom);
+    Long refuseFriendRequest(Long userIdSendedRequest);
 
-    void refuseFollower(Long userIdFollower, Long userId);
+    Long refuseFollower(Long userId);
 
-    void deleteFriend(Long userId, Long userIdDeleted);
+    Long deleteFriend(Long userIdDeleted);
+
+    List<UserDto> getAllUsers();
+
+    Long getIdUser(String username);
+
+    List<UserDto> getAllUsersFriends();
+
+    List<UserDto> getAllUsersFollowers();
 }

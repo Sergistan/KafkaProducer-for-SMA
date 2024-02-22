@@ -18,6 +18,10 @@ import java.time.LocalDateTime;
 @Schema(description = "PostDto request/response")
 public class PostDto implements Serializable {
 
+    @Schema(description = "Id поста", example = "1", type = "integer", requiredMode = Schema.RequiredMode.NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Long id;
+
     @Schema(description = "Описание поста", example = "Description", type = "string")
     @NotNull(message = "Description must be not null.")
     @Length(max = 255,
@@ -50,4 +54,8 @@ public class PostDto implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime createdAt;
 
+    @Schema(description = "Имя автора поста", example = "Sergey", type = "string", accessMode = Schema.AccessMode.READ_ONLY)
+    @Length(max = 255, message = "authorName length must be smaller than 255 symbols.")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String authorName;
 }

@@ -3,6 +3,7 @@ package com.utochkin.kafkaproducerforsma.security;
 
 import com.utochkin.kafkaproducerforsma.dto.response.JwtResponse;
 import com.utochkin.kafkaproducerforsma.exceptions.AccessDeniedException;
+import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.models.Role;
 import com.utochkin.kafkaproducerforsma.models.User;
 import com.utochkin.kafkaproducerforsma.props.JwtProperties;

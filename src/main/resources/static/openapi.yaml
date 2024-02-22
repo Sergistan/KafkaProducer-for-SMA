@@ -48,14 +48,6 @@ paths:
       summary: "Получение постов (ленты активности) от пользователей на которых подписан пользователь"
       operationId: getFeedUser
       parameters:
-        - name: postId
-          description: "ID пользователя для которого будет отображена лента активности"
-          in: query
-          required: true
-          allowEmptyValue: false
-          example: 1
-          schema:
-            type: integer
         - name: page
           description: "Номер отображаемой страницы ленты активности (начинается с 0)"
           in: query
@@ -65,7 +57,7 @@ paths:
             type: integer
             default: 0
         - name: size
-          description: "Количество постов на одной странице"
+          description: "Размер отображаемой страницы ленты активности (начинается с 0)"
           in: query
           required: true
           allowEmptyValue: false
@@ -193,7 +185,7 @@ paths:
 
 
   /api/v1/post/getAllPosts:
-    delete:
+    get:
       security:
         - bearerAuth: [ ]
       tags:
@@ -384,19 +376,11 @@ paths:
         - bearerAuth: [ ]
       tags:
         - Chat endpoints
-      summary: "Присоединение к чату по id чата и по id пользователя"
+      summary: "Присоединение к чату"
       operationId: joinChat
       parameters:
         - name: chatId
           description: "ID чата"
-          in: query
-          required: true
-          allowEmptyValue: false
-          example: 1
-          schema:
-            type: integer
-        - name: userId
-          description: "ID пользователя"
           in: query
           required: true
           allowEmptyValue: false
@@ -436,19 +420,11 @@ paths:
         - bearerAuth: [ ]
       tags:
         - Chat endpoints
-      summary: "Отключение от чата по id чата и по id пользователя"
+      summary: "Отключение от чата"
       operationId: leaveChat
       parameters:
         - name: chatId
           description: "ID чата"
-          in: query
-          required: true
-          allowEmptyValue: false
-          example: 1
-          schema:
-            type: integer
-        - name: userId
-          description: "ID пользователя"
           in: query
           required: true
           allowEmptyValue: false
@@ -514,8 +490,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/user/getAllChats:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Chat endpoints
+      summary: "Получение всех существующих чатов между пользователями (Доступен только авторизованным пользователям с ролью ADMIN)"
+      operationId: getAllChats
+      responses:
+        '200':
+          description: Successful get all chats from BD
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatDto'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/user/friendRequest:
+
+  /api/v1/user/createFriendRequest:
     post:
       security:
         - bearerAuth: [ ]
@@ -524,14 +530,6 @@ paths:
       summary: "Отправка запроса <добавить в друзья>"
       operationId: createFriendRequest
       parameters:
-        - name: userIdFrom
-          description: "ID пользователя отправляющего заявку <добавить в друзья>"
-          in: query
-          required: true
-          allowEmptyValue: false
-          example: 1
-          schema:
-            type: integer
         - name: userIdTo
           description: "ID пользователя, которому отправили заявку <добавить в друзья>"
           in: query
@@ -570,20 +568,12 @@ paths:
       summary: "Принятие запроса <добавить в друзья>"
       operationId: acceptFriendRequest
       parameters:
-        - name: userIdFrom
+        - name: userIdSendedRequest
           description: "ID пользователя отправляющего заявку <добавить в друзья>"
           in: query
           required: true
           allowEmptyValue: false
           example: 1
-          schema:
-            type: integer
-        - name: userIdAccepted
-          description: "ID пользователя принимающего заявку <добавить в друзья>"
-          in: query
-          required: true
-          allowEmptyValue: false
-          example: 2
           schema:
             type: integer
       responses:
@@ -616,20 +606,12 @@ paths:
       summary: "Отклонение запроса <добавить в друзья>"
       operationId: refuseFriendRequest
       parameters:
-        - name: userIdFrom
-          description: "ID пользователя отправляющего заявку <добавить в друзья>"
+        - name: userIdSendedRequest
+          description: "ID пользователя отправившего заявку <добавить в друзья>"
           in: query
           required: true
           allowEmptyValue: false
           example: 1
-          schema:
-            type: integer
-        - name: userIdRefused
-          description: "ID пользователя отклонившего заявку <добавить в друзья>"
-          in: query
-          required: true
-          allowEmptyValue: false
-          example: 2
           schema:
             type: integer
       responses:
@@ -662,14 +644,6 @@ paths:
       summary: "Отклонение подписки на человека"
       operationId: refuseFollower
       parameters:
-        - name: userIdFollower
-          description: "ID пользователя, который отказывается от подписки на другого пользователя"
-          in: query
-          required: true
-          allowEmptyValue: false
-          example: 1
-          schema:
-            type: integer
         - name: userId
           description: "ID пользователя, на которого подписан пользователь"
           in: query
@@ -708,16 +682,8 @@ paths:
       summary: "Удаление пользователя из друзей"
       operationId: deleteFriend
       parameters:
-        - name: userId
-          description: "ID пользователя, который удаляет из друзей"
-          in: query
-          required: true
-          allowEmptyValue: false
-          example: 1
-          schema:
-            type: integer
         - name: userIdDeleted
-          description: "ID пользователя, которого удалили из друзей"
+          description: "ID пользователя, которого хотят удалить из друзей"
           in: query
           required: true
           allowEmptyValue: false
@@ -745,6 +711,127 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/user/getAllUsers:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Получение всех пользователей из базы данных (Доступен только авторизованным пользователям с ролью ADMIN)"
+      operationId: getAllUsers
+      responses:
+        '200':
+          description: Successful get all users from BD
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/getIdUserByUsername:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Получение id пользователя по его имени"
+      operationId: getIdUserByUsername
+      parameters:
+        - name: username
+          description: "Имя пользователя, по которому ищется userId"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: Sergey
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful get id users
+          content:
+            '*/*':
+              schema:
+                type: string
+                example: "User id = 1 by username - Sergey"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/getAllUsersFriends:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Получение всех друзей пользователя"
+      operationId: getAllUsersFriends
+      responses:
+        '200':
+          description: Successful get all friends user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/getAllUsersFollowers:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - User endpoints
+      summary: "Получение всех друзей фолловеров"
+      operationId: getAllUsersFollowers
+      responses:
+        '200':
+          description: Successful get all followers user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/auth/login:
     post:
@@ -849,6 +936,11 @@ components:
         - message
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
+          description: "Id поста"
+          example: "1"
         description:
           type: string
           description: "Описание поста"
@@ -874,6 +966,11 @@ components:
           description: "Дата и время создания(изменения) поста"
           example: "2024-01-12 13:56"
           pattern: "yyyy-MM-dd HH:mm"
+        authorName:
+          type: string
+          readOnly: true
+          description: "Имя автора поста"
+          example: "Sergey"
 
     ChatDto:
       required:
@@ -931,7 +1028,7 @@ components:
       type: object
       properties:
         id:
-          type: string
+          type: integer
           description: "Id пользователя"
           example: "1"
         name:
@@ -949,11 +1046,17 @@ components:
 
     UserDto:
       required:
+        - id
         - email
         - name
         - password
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
+          description: "Id пользователя"
+          example: "1"
         name:
           type: string
           description: "Имя пользователя"
