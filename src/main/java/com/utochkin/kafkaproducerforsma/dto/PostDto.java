@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Schema(description = "PostDto request/response")
 public class PostDto implements Serializable {
 
-    @Schema(description = "Id поста", example = "1", type = "integer", requiredMode = Schema.RequiredMode.NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
+    @Schema(description = "Id поста", example = "1", type = "integer", accessMode = Schema.AccessMode.READ_ONLY)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
@@ -48,8 +48,7 @@ public class PostDto implements Serializable {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String imageName;
 
-    @Schema(description = "Дата и время создания(изменения) поста", example = "2024-01-12 13:56", type = "string", pattern = "yyyy-MM-dd HH:mm",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
+    @Schema(description = "Дата и время создания(изменения) поста", example = "2024-01-12 13:56", type = "string", pattern = "yyyy-MM-dd HH:mm", accessMode = Schema.AccessMode.READ_ONLY)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime createdAt;

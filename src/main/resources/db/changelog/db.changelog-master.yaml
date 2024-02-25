@@ -9,6 +9,9 @@ databaseChangeLog:
       file: /tables/friends.sql
       relativeToChangeLogFile: true
   - include:
+      file: /tables/friend_requests.sql
+      relativeToChangeLogFile: true
+  - include:
       file: /tables/chats.sql
       relativeToChangeLogFile: true
   - include:

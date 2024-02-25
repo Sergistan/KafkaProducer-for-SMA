@@ -17,7 +17,7 @@ import java.io.Serializable;
 @Schema(description = "UserDto request/response")
 public class UserDto implements Serializable {
 
-    @Schema(description = "Id пользователя", example = "1", type = "integer", requiredMode = Schema.RequiredMode.NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
+    @Schema(description = "Id пользователя", example = "1", type = "integer", accessMode = Schema.AccessMode.READ_ONLY)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 

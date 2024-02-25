@@ -1,6 +1,7 @@
 package com.utochkin.kafkaproducerforsma.mappers;
 
 
+import com.utochkin.kafkaproducerforsma.dto.ChatDto;
 import com.utochkin.kafkaproducerforsma.dto.MessageDto;
 import com.utochkin.kafkaproducerforsma.dto.UpdateMessageDto;
 import com.utochkin.kafkaproducerforsma.models.Chat;
@@ -9,6 +10,7 @@ import com.utochkin.kafkaproducerforsma.models.User;
 import org.mapstruct.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Mapper(componentModel = "spring",
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
@@ -34,9 +36,12 @@ public interface MessageMapper {
     @Mapping(target = "senderName" , expression = "java(message.getSender().getName())")
     @Mapping(target = "sentAt", expression = "java(LocalDateTime.now())")
     MessageDto toMessageDto(Message message);
+
     @Mapping(target = "updatedText", expression = "java(updateMessage.getText())")
     @Mapping(target = "chatId", ignore = true)
     @Mapping(target = "senderName", ignore = true)
     @Mapping(target = "updated", ignore = true)
     UpdateMessageDto toUpdateMessageDto(Message updateMessage);
+
+    List<MessageDto> toListDto(List<Message> messages);
 }

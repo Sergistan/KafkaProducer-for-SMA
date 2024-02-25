@@ -2,6 +2,7 @@ package com.utochkin.kafkaproducerforsma.services.interfaces;
 
 
 import com.utochkin.kafkaproducerforsma.dto.ChatDto;
+import com.utochkin.kafkaproducerforsma.dto.MessageDto;
 
 import java.util.List;
 
@@ -19,4 +20,9 @@ public interface ChatService {
     String getLastMessage (Long chatId);
 
     List<ChatDto> getAllChats();
+
+    List<MessageDto> getAllMessagesInChat(Long chatId);
+
+    ChatDto getChatByIdFromMessageDto(Long chatId);
+    String getLastMessageFromMessageDto(Long chatId);
 }

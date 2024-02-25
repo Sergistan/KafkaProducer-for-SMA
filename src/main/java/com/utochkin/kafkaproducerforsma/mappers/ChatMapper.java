@@ -10,12 +10,12 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ChatMapper {
-    @Mapping(target = "messages" , ignore = true)
+    @Mapping(target = "messages", ignore = true)
     Chat toChat(ChatDto chatDto);
 
-    @Mapping(target = "firstUserId" , ignore = true)
-    @Mapping(target = "secondUserId" , ignore = true)
-    ChatDto toDto (Chat chat);
+    @Mapping(target = "firstUserId", expression = "java(chatDto.getUsers().stream().map(User::getId).findFirst().get())")
+    @Mapping(target = "secondUserId", expression = "java(chatDto.getUsers().stream().map(User::getId).skip(1).findFirst().orElse(null))")
+    ChatDto toDto(Chat chat);
 
     List<ChatDto> toListDto(List<Chat> chats);
 }

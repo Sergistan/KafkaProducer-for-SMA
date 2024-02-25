@@ -20,6 +20,7 @@ public interface UserMapper {
     @Mapping(target = "posts", ignore = true)
     @Mapping(target = "friends", ignore = true)
     @Mapping(target = "followers", ignore = true)
+    @Mapping(target = "friendRequests", ignore = true)
     @Mapping(target = "chats", ignore = true)
     @Mapping(target = "messages", ignore = true)
     User toEntity(UserDto userDto);

@@ -1,16 +1,18 @@
 package com.utochkin.kafkaproducerforsma.services.impl;
 
 
+import com.utochkin.kafkaproducerforsma.dto.ChatDto;
 import com.utochkin.kafkaproducerforsma.dto.MessageDto;
 import com.utochkin.kafkaproducerforsma.dto.UpdateMessageDto;
 import com.utochkin.kafkaproducerforsma.dto.request.MessageDeleteIdRequest;
+import com.utochkin.kafkaproducerforsma.exceptions.BadInputDataException;
 import com.utochkin.kafkaproducerforsma.exceptions.ChatNotFoundException;
 import com.utochkin.kafkaproducerforsma.exceptions.MessageNotFoundException;
-import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.mappers.ChatMapper;
 import com.utochkin.kafkaproducerforsma.mappers.MessageMapper;
 import com.utochkin.kafkaproducerforsma.models.Chat;
 import com.utochkin.kafkaproducerforsma.models.Message;
+import com.utochkin.kafkaproducerforsma.models.User;
 import com.utochkin.kafkaproducerforsma.repository.ChatRepository;
 import com.utochkin.kafkaproducerforsma.repository.MessageRepository;
 import com.utochkin.kafkaproducerforsma.services.interfaces.ChatService;
@@ -37,10 +39,16 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageDto addMessage(MessageDto messageDto) {
 
-        Message message = messageRepository.save(messageMapper.toMessage(messageDto,
-                userService.findByName(messageDto.getSenderName()),
-                chatMapper.toChat(chatService.getChatById(messageDto.getChatId())))
-        );
+        User user = userService.findByName(messageDto.getSenderName());
+        ChatDto chatDto = chatService.getChatByIdFromMessageDto(messageDto.getChatId());
+        if (!chatDto.getUsers().contains(user)){
+            throw new BadInputDataException("Your name is incorrect!");
+        }
+
+        Chat chat = chatMapper.toChat(chatDto);
+        Message message = messageMapper.toMessage(messageDto, user, chat);
+
+        messageRepository.save(message);
         setAndSaveLastMessageAtChatById(messageDto.getChatId());
 
         return messageMapper.toMessageDto(message);
@@ -53,13 +61,17 @@ public class MessageServiceImpl implements MessageService {
         setAndSaveLastMessageAtChatById(messageDeleteIdRequest.getIdChat());
 
         log.info("Message with id = {} deleted.", messageDeleteIdRequest.getIdMessage());
-        return new MessageDeleteIdRequest(messageDeleteIdRequest.getIdMessage(),
-                messageDeleteIdRequest.getIdChat(),
-                true);
+        return new MessageDeleteIdRequest(messageDeleteIdRequest.getIdMessage(), messageDeleteIdRequest.getIdChat(), true);
     }
 
     @Override
     public UpdateMessageDto update(UpdateMessageDto updateMessageDto) {
+        User user = userService.findByName(updateMessageDto.getSenderName());
+        ChatDto chatDto = chatService.getChatByIdFromMessageDto(updateMessageDto.getChatId());
+        if (!chatDto.getUsers().contains(user)){
+            throw new BadInputDataException("Your name is incorrect!");
+        }
+
         Message message = messageRepository.findById(updateMessageDto.getId()).orElseThrow(MessageNotFoundException::new);
         Message updateMessage = messageMapper.update(message, updateMessageDto);
         messageRepository.save(updateMessage);

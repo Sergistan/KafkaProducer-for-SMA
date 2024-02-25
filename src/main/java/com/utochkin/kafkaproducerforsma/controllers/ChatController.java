@@ -2,7 +2,7 @@ package com.utochkin.kafkaproducerforsma.controllers;
 
 
 import com.utochkin.kafkaproducerforsma.dto.ChatDto;
-import com.utochkin.kafkaproducerforsma.dto.UserDto;
+import com.utochkin.kafkaproducerforsma.dto.MessageDto;
 import com.utochkin.kafkaproducerforsma.dto.response.ErrorResponse;
 import com.utochkin.kafkaproducerforsma.services.interfaces.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,7 +39,7 @@ public class ChatController {
         return new ResponseEntity<>(chatService.getChatById(chatId), HttpStatus.OK);
     }
 
-    @GetMapping("/last_message")
+    @GetMapping("/lastMessage")
     @Operation(summary = "Получение последнего сообщения в чате по id чата")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful get last message at chat", content = @Content(schema = @Schema(implementation = String.class),
@@ -118,4 +118,16 @@ public class ChatController {
     public ResponseEntity<?> getAllChats() {
         return new ResponseEntity<>(chatService.getAllChats(), HttpStatus.OK);
     }
+
+    @GetMapping("/getAllMessagesInChat")
+    @Operation(summary = "Получение истории сообщений в чате между пользователями")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful get all messages in chat", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = MessageDto.class)))),
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<?> getAllMessagesInChat(@NotNull @RequestParam(value = "chatId") @Parameter(name = "chatId", description = "ID чата", in = ParameterIn.QUERY, example = "1") Long chatId) {
+        return new ResponseEntity<>(chatService.getAllMessagesInChat(chatId), HttpStatus.OK);
+    }
+
 }

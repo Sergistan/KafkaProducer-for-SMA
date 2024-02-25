@@ -60,6 +60,7 @@ public class UserServiceImpl implements UserService {
             throw new BadInputDataException(String.format("User with id = %s already have friend with id = %s", userFrom.getId(), userIdTo));
         }
         userTo.addFollower(userFrom);
+        userTo.addFriendRequest(userFrom);
         return userFrom.getId();
     }
 
@@ -71,6 +72,8 @@ public class UserServiceImpl implements UserService {
         checkingTheRequestToYourself(userAccepted, userIdSendedRequest);
 
         User userSendedRequest = userRepository.findById(userIdSendedRequest).orElseThrow(UserNotFoundException::new);
+        checkExistFriendRequest(userAccepted, userSendedRequest);
+
         if (userAccepted.getFriends().contains(userSendedRequest)) {
             throw new BadInputDataException(String.format("User with id = %s already friend with id = %s", userAccepted.getId(), userIdSendedRequest));
         }
@@ -86,10 +89,11 @@ public class UserServiceImpl implements UserService {
         checkingTheRequestToYourself(userRefusedRequest, userIdSendedRequest);
 
         User userSendedRequest = userRepository.findById(userIdSendedRequest).orElseThrow(UserNotFoundException::new);
+        checkExistFriendRequest(userRefusedRequest, userSendedRequest);
+
         if (userSendedRequest.getFriends().contains(userRefusedRequest)) {
             throw new BadInputDataException(String.format("User with id = %s already accept friend request user with id = %s", userRefusedRequest.getId(), userIdSendedRequest));
         }
-        userRefusedRequest.addFollower(userSendedRequest);
         return userRefusedRequest.getId();
     }
 
@@ -101,7 +105,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         if (!user.getFollowers().contains(userRefused)) {
-            throw new BadInputDataException(String.format("User with id = %s not have follower with id = %s", userId, userRefused.getId()));
+            throw new BadInputDataException(String.format("User with id = %s not have follower on id = %s", userId, userRefused.getId()));
         }
         user.deleteFollower(userRefused);
         return userRefused.getId();
@@ -118,7 +122,7 @@ public class UserServiceImpl implements UserService {
             throw new BadInputDataException(String.format("User with id = %s not have friend with id = %s", user.getId(), userIdDeleted));
         }
         user.deleteFriend(userDeleted);
-        user.deleteFollower(userDeleted);
+        userDeleted.deleteFollower(user);
 
         if (user.getChats().stream()
                 .anyMatch(chat -> userDeleted.getChats().contains(chat))) {
@@ -147,7 +151,7 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAllUsersFriends() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
-        if (!user.getFriends().isEmpty()){
+        if (!user.getFriends().isEmpty()) {
             return userMapper.toListDto(user.getFriends().stream().toList());
         }
         return Collections.emptyList();
@@ -158,7 +162,7 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAllUsersFollowers() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
-        if (!user.getFollowers().isEmpty()){
+        if (!user.getFollowers().isEmpty()) {
             return userMapper.toListDto(user.getFollowers().stream().toList());
         }
         return Collections.emptyList();
@@ -176,5 +180,12 @@ public class UserServiceImpl implements UserService {
         if (user.getId().equals(userIdRequest)) {
             throw new BadInputDataException("You can't send a request to yourself");
         }
+    }
+
+    private void checkExistFriendRequest(User user, User userSendedRequest) {
+        if (user.getFriendRequests().contains(userSendedRequest)) {
+            user.deleteFriendRequest(userSendedRequest);
+        } else
+            throw new BadInputDataException(String.format("You have not friend request from %s", userSendedRequest.getName()));
     }
 }

@@ -53,6 +53,14 @@ public class User implements Serializable {
     private Set<User> followers = new HashSet<>();
 
     @ManyToMany
+    @JoinTable(name = "friend_requests",
+            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "friend_request_id", referencedColumnName = "id"))
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<User> friendRequests = new HashSet<>();
+
+    @ManyToMany
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<Chat> chats;
@@ -78,4 +86,11 @@ public class User implements Serializable {
         this.followers.remove(user);
     }
 
+    public void addFriendRequest(User user) {
+        this.friendRequests.add(user);
+    }
+
+    public void deleteFriendRequest(User user) {
+        this.friendRequests.remove(user);
+    }
 }
