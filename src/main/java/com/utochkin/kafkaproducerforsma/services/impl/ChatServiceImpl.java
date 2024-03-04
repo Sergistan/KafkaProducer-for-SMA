@@ -87,14 +87,14 @@ public class ChatServiceImpl implements ChatService {
 
         Chat chat = chatMapper.toChat(chatDto);
 
-        Set<User> users = new HashSet<>() {
-            {
-                add(firstUser);
-                add(secondUser);
-            }
-        };
+//        Set<User> users = new HashSet<>() {
+//            {
+//                add(firstUser);
+//                add(secondUser);
+//            }
+//        };
 
-        chat.setUsers(users);
+        chat.setUsers(Set.of(firstUser,secondUser));
         chat.setCreatedAt(LocalDateTime.now());
 
         chatRepository.save(chat);
