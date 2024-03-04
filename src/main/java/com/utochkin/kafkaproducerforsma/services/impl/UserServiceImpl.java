@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
         checkingTheRequestToYourself(userAccepted, userIdSendedRequest);
 
         User userSendedRequest = userRepository.findById(userIdSendedRequest).orElseThrow(UserNotFoundException::new);
-        checkExistFriendRequest(userAccepted, userSendedRequest);
+        ifExistFriendRequestThenDeleteFriendRequest(userAccepted, userSendedRequest);
 
         if (userAccepted.getFriends().contains(userSendedRequest)) {
             throw new BadInputDataException(String.format("User with id = %s already friend with id = %s", userAccepted.getId(), userIdSendedRequest));
@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
         checkingTheRequestToYourself(userRefusedRequest, userIdSendedRequest);
 
         User userSendedRequest = userRepository.findById(userIdSendedRequest).orElseThrow(UserNotFoundException::new);
-        checkExistFriendRequest(userRefusedRequest, userSendedRequest);
+        ifExistFriendRequestThenDeleteFriendRequest(userRefusedRequest, userSendedRequest);
 
         if (userSendedRequest.getFriends().contains(userRefusedRequest)) {
             throw new BadInputDataException(String.format("User with id = %s already accept friend request user with id = %s", userRefusedRequest.getId(), userIdSendedRequest));
@@ -182,7 +182,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void checkExistFriendRequest(User user, User userSendedRequest) {
+    private void ifExistFriendRequestThenDeleteFriendRequest(User user, User userSendedRequest) {
         if (user.getFriendRequests().contains(userSendedRequest)) {
             user.deleteFriendRequest(userSendedRequest);
         } else

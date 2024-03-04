@@ -1,7 +1,6 @@
 package com.utochkin.kafkaproducerforsma.mappers;
 
 
-import com.utochkin.kafkaproducerforsma.dto.ChatDto;
 import com.utochkin.kafkaproducerforsma.dto.MessageDto;
 import com.utochkin.kafkaproducerforsma.dto.UpdateMessageDto;
 import com.utochkin.kafkaproducerforsma.models.Chat;

@@ -3,6 +3,7 @@ package com.utochkin.kafkaproducerforsma.security;
 
 import com.utochkin.kafkaproducerforsma.models.Role;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 @Data
+@Builder
 @AllArgsConstructor
 public class JwtEntity implements UserDetails {
 

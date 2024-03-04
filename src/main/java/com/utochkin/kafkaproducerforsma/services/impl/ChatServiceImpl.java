@@ -33,7 +33,6 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
     private final ChatMapper chatMapper;
-
     private final MessageMapper messageMapper;
     private final UserService userService;
     private final UserRepository userRepository;
@@ -54,6 +53,7 @@ public class ChatServiceImpl implements ChatService {
 
         return chatDto;
     }
+
     @Override
     public ChatDto getChatByIdFromMessageDto(Long chatId) {
         Chat chatById = chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
@@ -114,6 +114,10 @@ public class ChatServiceImpl implements ChatService {
         User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
 
         Chat chat = chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
+
+        if (chat.getUsers().size() == 2) {
+            throw new BadInputDataException("There are already two users in the chat");
+        }
 
         User oneManChat = chat.getUsers().stream().findFirst().orElseThrow(UserNotFoundException::new);
 

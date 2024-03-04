@@ -38,5 +38,4 @@ public class Message implements Serializable {
     @JoinColumn (name = "chat_id")
     @JsonIgnore
     private Chat chat;
-
 }

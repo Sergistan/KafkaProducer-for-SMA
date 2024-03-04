@@ -290,7 +290,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/chat/last_message:
+  /api/v1/chat/lastMessage:
     get:
       security:
         - bearerAuth: [ ]
@@ -315,6 +315,45 @@ paths:
               schema:
                 type: string
                 example: "Последнее сообщение в чате"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/chat/getAllMessagesInChat:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Chat endpoints
+      summary: "Получение истории сообщений в чате между пользователями"
+      operationId: getAllMessagesInChat
+      parameters:
+        - name: chatId
+          description: "ID чата"
+          in: query
+          required: true
+          allowEmptyValue: false
+          example: 1
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful get all messages in chat
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageDto'
         '404':
           description: Not found
           content:
@@ -1070,6 +1109,40 @@ components:
           type: string
           description: "Электронная почта пользователя"
           example: "Sergey@gmail.com"
+
+    MessageDto:
+      required:
+        - id
+        - chatId
+        - text
+        - senderName
+        - sentAt
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: "Id сообщения"
+          example: "1"
+        chatId:
+          type: integer
+          description: "Id чата"
+          example: "1"
+        text:
+          type: string
+          description: "Текст сообщения"
+          example: "Привет)"
+        senderName:
+          type: string
+          description: "Имя отправителя сообщения"
+          example: "Sergey"
+        sentAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: "Дата и время создания чата"
+          example: "2024-01-12 13:56"
+          pattern: "yyyy-MM-dd HH:mm"
 
     ErrorResponse:
       type: object

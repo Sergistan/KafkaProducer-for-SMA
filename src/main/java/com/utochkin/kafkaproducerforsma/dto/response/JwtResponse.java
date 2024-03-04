@@ -2,11 +2,16 @@ package com.utochkin.kafkaproducerforsma.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.mapstruct.Builder;
 
 import java.io.Serializable;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Schema(description = "Jwt ответ")
 public class JwtResponse implements Serializable {
 

@@ -14,6 +14,7 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table(name = "chats")
 public class Chat implements Serializable {
 
@@ -40,6 +41,4 @@ public class Chat implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL , mappedBy = "chat")
     private List<Message> messages;
-
-
 }

@@ -4,7 +4,6 @@ package com.utochkin.kafkaproducerforsma.services.impl;
 import com.utochkin.kafkaproducerforsma.dto.request.JwtRequest;
 import com.utochkin.kafkaproducerforsma.dto.response.JwtResponse;
 import com.utochkin.kafkaproducerforsma.exceptions.BadCredentialsException;
-import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.models.User;
 import com.utochkin.kafkaproducerforsma.security.JwtTokenProvider;
 import com.utochkin.kafkaproducerforsma.services.interfaces.AuthService;
