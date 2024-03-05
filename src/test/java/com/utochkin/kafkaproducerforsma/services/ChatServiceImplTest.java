@@ -19,8 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
-@MockitoSettings(strictness = Strictness.LENIENT)
 @ExtendWith(MockitoExtension.class)
 class ChatServiceImplTest {
 
@@ -257,7 +254,7 @@ class ChatServiceImplTest {
     }
 
     @Test
-    void leaveChat() {  // работает, но неправильно написан тест
+    void leaveChat() {
         User user1 = User.builder()
                 .id(1L)
                 .name("Sergey")
@@ -282,23 +279,12 @@ class ChatServiceImplTest {
                 .id(1L)
                 .createdAt(LocalDateTime.now())
                 .lastMessage("Msg")
-                .users(new HashSet<>())
+                .users(Set.of(user1,user2))
                 .messages(Collections.emptyList())
                 .build();
 
-        Set <Chat> chats = new HashSet<>();
-        chats.add(chat);
-
-        Set <User> users = new HashSet<>();
-        users.add(user1);
-        users.add(user2);
-
         user1.addFriend(user2);
         user2.addFriend(user1);
-        user1.setChats(chats);
-        user2.setChats(chats);
-        chat.setUsers(users);
-
 
         ChatDto chatDto = new ChatDto(1L, chat.getCreatedAt(), "Msg", user1.getId(), user2.getId(), Set.of(user1, user2));
 
@@ -309,7 +295,12 @@ class ChatServiceImplTest {
         when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
         when(chatRepository.findById(chat.getId())).thenReturn(Optional.of(chat));
 
-        Assertions.assertTrue(chat.getUsers().stream().map(User::getName).anyMatch(x -> x.equals(user1.getName())));
+        Set<User> usersOfChat = new HashSet<>();
+        usersOfChat.add(user1);
+        usersOfChat.add(user2);
+        chat.setUsers(usersOfChat);
+
+        Assertions.assertTrue(chat.getUsers().contains(user1));
 
         when(chatMapper.toDto(chat)).thenReturn(chatDto);
 
@@ -318,47 +309,10 @@ class ChatServiceImplTest {
 
         Assertions.assertEquals(chatDto, chatService.getChatById(chat.getId()));
 
-        when(chatMapper.toChat(chatDto)).thenReturn(chat);
-
-        Set<User> usersOfChat = new HashSet<>();
-        usersOfChat.add(user2);
-        chat.setUsers(usersOfChat);
-
         Assertions.assertNotNull(chat.getUsers());
 
         Assertions.assertEquals(user1.getId(), chatService.leaveChat(chat.getId()));
         verify(chatRepository, times(1)).save(chat);
-
-
-
-
-
-//        doReturn(user2.getName()).when(authentication).getName();
-//        doReturn(authentication).when(securityContext).getAuthentication();
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        when(userRepository.findByName(user2.getName())).thenReturn(Optional.of(user1));
-//        when(chatRepository.findById(chat.getId())).thenReturn(Optional.of(chat));
-//
-//        Assertions.assertTrue(chat.getUsers().stream().map(User::getName).anyMatch(x -> x.equals(user2.getName())));
-//
-//        when(chatMapper.toDto(chat)).thenReturn(chatDto);
-//
-//        when(chatService.getLastMessage(chat.getId())).thenReturn(chat.getLastMessage());
-//        chatDto.setLastMessage(chat.getLastMessage());
-//
-//        Assertions.assertEquals(chatDto, chatService.getChatById(chat.getId()));
-//
-//        when(chatMapper.toChat(chatDto)).thenReturn(chat);
-//
-//        Set<User> usersOfChat = new HashSet<>();
-//        usersOfChat.add(user2);
-//        chat.setUsers(usersOfChat);
-//
-//        Assertions.assertNotNull(chat.getUsers());
-//
-//        Assertions.assertEquals(user1.getId(), chatService.leaveChat(chat.getId()));
-//        verify(chatRepository, times(1)).save(chat);
     }
 
     @Test

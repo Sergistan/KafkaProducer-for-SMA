@@ -129,8 +129,11 @@ public class ChatServiceImpl implements ChatService {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByName(name).orElseThrow(UserNotFoundException::new);
 
-        ChatDto chatDto = getChatById(chatId);
-        Chat chat = chatMapper.toChat(chatDto);
+        Chat chat = chatRepository.findById(chatId).orElseThrow(ChatNotFoundException::new);
+
+        if (!chat.getUsers().contains(user)) {
+            throw new AccessDeniedException("Error: access denied!");
+        }
 
         chat.getUsers().remove(user);
         if (chat.getUsers().isEmpty()) {
