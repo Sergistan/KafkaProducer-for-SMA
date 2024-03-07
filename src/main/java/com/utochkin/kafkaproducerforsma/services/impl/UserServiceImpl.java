@@ -73,7 +73,6 @@ public class UserServiceImpl implements UserService {
 
         User userSendedRequest = userRepository.findById(userIdSendedRequest).orElseThrow(UserNotFoundException::new);
         ifExistFriendRequestThenDeleteFriendRequest(userAccepted, userSendedRequest);
-
         if (userAccepted.getFriends().contains(userSendedRequest)) {
             throw new BadInputDataException(String.format("User with id = %s already friend with id = %s", userAccepted.getId(), userIdSendedRequest));
         }
