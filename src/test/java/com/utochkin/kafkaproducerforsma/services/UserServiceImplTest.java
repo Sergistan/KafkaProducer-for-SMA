@@ -1,6 +1,7 @@
 package com.utochkin.kafkaproducerforsma.services;
 
 import com.utochkin.kafkaproducerforsma.dto.UserDto;
+import com.utochkin.kafkaproducerforsma.exceptions.AccessDeniedException;
 import com.utochkin.kafkaproducerforsma.exceptions.BadInputDataException;
 import com.utochkin.kafkaproducerforsma.exceptions.UserNotFoundException;
 import com.utochkin.kafkaproducerforsma.mappers.UserMapper;
@@ -17,23 +18,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 
-@MockitoSettings(strictness = Strictness.LENIENT)
+
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
@@ -51,49 +46,6 @@ class UserServiceImplTest {
     private ChatServiceImpl chatService;
     @Mock
     private PasswordEncoder passwordEncoder;
-
-//    @BeforeEach
-//    void setUp() {
-//
-//
-//        User user1 = User.builder()
-//                .id(1L)
-//                .name("Sergey")
-//                .password(passwordEncoder.encode("111"))
-//                .email("sergistan.utochkin@yandex.ru")
-//                .role(Role.ROLE_USER)
-//                .friends(Collections.emptySet())
-//                .followers(Collections.emptySet())
-//                .build();
-//
-//        User user2 = User.builder()
-//                .id(2L)
-//                .name("Ilya")
-//                .password(passwordEncoder.encode("222"))
-//                .email("dzaga73i98@gmail.com")
-//                .role(Role.ROLE_USER)
-//                .friends(Collections.emptySet())
-//                .followers(Collections.emptySet())
-//                .build();
-//
-//        UserDto toUserDto1 = UserDto.builder()
-//                .id(1L)
-//                .name("Sergey")
-//                .email("sergistan.utochkin@yandex.ru")
-//                .build();
-//
-//        UserDto toUserDto2 = UserDto.builder()
-//                .id(2L)
-//                .name("Ilya")
-//                .email("dzaga73i98@gmail.com")
-//                .build();
-//
-//        UserDto userDto1 = UserDto.builder()
-//                .name("Sergey")
-//                .password("111")
-//                .build();
-//    }
-
 
     @Test
     void findByName() {
@@ -573,7 +525,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void deleteFriend() {
+    void deleteFriendWithChat() {
         User user1 = User.builder()
                 .id(1L)
                 .name("Sergey")
@@ -606,6 +558,8 @@ class UserServiceImplTest {
 
         user1.addFriend(user2);
         user2.addFriend(user1);
+        user1.addFollower(user2);
+        user2.addFollower(user1);
         user1.setChats(Set.of(chat));
         user2.setChats(Set.of(chat));
         chat.setUsers(Set.of(user1, user2));
@@ -615,129 +569,391 @@ class UserServiceImplTest {
         SecurityContextHolder.setContext(securityContext);
 
         when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
-        when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user1));
+        when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
 
         Assertions.assertTrue(user1.getFriends().contains(user2));
-
-//        Set<User> friend1 = new HashSet<>();
-//        friend1.add(user1);
-//        user2.setFriends(friend1);
-//
-//        Set<User> friend2 = new HashSet<>();
-//        friend2.add(user2);
-//        user1.setFriends(friend2);
 
         Assertions.assertTrue(user1.getChats().stream().anyMatch(x -> user2.getChats().contains(x)));
 
         chatService.deleteChatById(chat.getId());
 
         Assertions.assertEquals(user1.getId(), userService.deleteFriend(user2.getId()));
+        Assertions.assertFalse(user2.getFollowers().contains(user1));
+        Assertions.assertFalse(user1.getFriends().contains(user2));
+        Assertions.assertFalse(user2.getFriends().contains(user1));
+        Assertions.assertTrue(user1.getFollowers().contains(user2));
     }
 
-//    @Test
-//    void getAllUsers() {
-//        User user = mock(User.class);
-//        when(user.getName()).thenReturn("Tom");
-//
-//        doReturn(user.getName()).when(authentication).getName();
-//        doReturn(authentication).when(securityContext).getAuthentication();
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        when(userRepository.getAllNameAdmins()).thenReturn(List.of("Tom"));
-//        when(userRepository.findAll()).thenReturn(List.of(user1, user2));
-//        when(userMapper.toListDto(List.of(user1, user2))).thenReturn(List.of(toUserDto1, toUserDto2));
-//
-//        Assertions.assertEquals(List.of(toUserDto1, toUserDto2), userService.getAllUsers());
-//    }
-//
-//    @Test
-//    void notGetAllUsers() {
-//        User user = mock(User.class);
-//        Mockito.when(user.getName()).thenReturn("Tom");
-//
-//        doReturn(user.getName()).when(authentication).getName();
-//        doReturn(authentication).when(securityContext).getAuthentication();
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        when(userRepository.getAllNameAdmins()).thenReturn(List.of("Tom"));
-//        when(userRepository.findAll()).thenReturn(Collections.emptyList());
-//
-//        Assertions.assertEquals(Collections.emptyList(), userService.getAllUsers());
-//    }
-//
-//    @Test
-//    void getIdUser() {
-//        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
-//        Assertions.assertEquals(user1.getId(), userService.getIdUser(user1.getName()));
-//    }
-//
-//    @Test
-//    void notGetIdUser() {
-//        doThrow(UserNotFoundException.class).when(userRepository).findByName(Mockito.anyString());
-//        Assertions.assertThrows(UserNotFoundException.class, () -> userService.getIdUser(Mockito.anyString()));
-//    }
-//
-//    @Test
-//    void getAllUsersFriends() {
-//        User user = mock(User.class);
-//        User userFriend1 = mock(User.class);
-//        User userFriend3 = mock(User.class);
-//
-//        when(user.getFriends()).thenReturn(Set.of(userFriend1, userFriend3));
-//
-//        doReturn(user.getName()).when(authentication).getName();
-//        doReturn(authentication).when(securityContext).getAuthentication();
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        when(userRepository.findByName(user.getName())).thenReturn(Optional.of(user));
-//        when(userMapper.toListDto(List.of(userFriend1, userFriend3))).thenReturn(List.of(toUserDto1, toUserDto2));
-//
-//        Assertions.assertEquals(List.of(toUserDto1, toUserDto2), userService.getAllUsersFriends());
-//    }
-//
-//    @Test
-//    void notGetAllUsersFriends() {
-//        User user = mock(User.class);
-//
-//        when(user.getFriends()).thenReturn(Collections.emptySet());
-//
-//        doReturn(user.getName()).when(authentication).getName();
-//        doReturn(authentication).when(securityContext).getAuthentication();
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        when(userRepository.findByName(user.getName())).thenReturn(Optional.of(user));
-//
-//        Assertions.assertEquals(Collections.emptyList(), userService.getAllUsersFriends());
-//    }
-//
-//    @Test
-//    void getAllUsersFollowers() {
-//        User user = mock(User.class);
-//        User userFollower1 = mock(User.class);
-//        User userFollower2 = mock(User.class);
-//        when(user.getFollowers()).thenReturn(Set.of(userFollower1, userFollower2));
-//
-//        doReturn(user.getName()).when(authentication).getName();
-//        doReturn(authentication).when(securityContext).getAuthentication();
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        when(userRepository.findByName(user.getName())).thenReturn(Optional.of(user));
-//        when(userMapper.toListDto(List.of(userFollower1, userFollower2))).thenReturn(List.of(toUserDto1, toUserDto2));
-//
-//        Assertions.assertEquals(List.of(toUserDto1, toUserDto2), userService.getAllUsersFollowers());
-//    }
-//
-//    @Test
-//    void notGetAllUsersFollowers() {
-//        User user = mock(User.class);
-//        when(user.getFollowers()).thenReturn(Collections.emptySet());
-//
-//        doReturn(user.getName()).when(authentication).getName();
-//        doReturn(authentication).when(securityContext).getAuthentication();
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        when(userRepository.findByName(user.getName())).thenReturn(Optional.of(user));
-//
-//        Assertions.assertEquals(Collections.emptyList(), userService.getAllUsersFollowers());
-//    }
+    @Test
+    void deleteFriendWithoutChat() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .chats(new HashSet<>())
+                .build();
+
+        User user2 = User.builder()
+                .id(2L)
+                .name("Ilya")
+                .password(passwordEncoder.encode("222"))
+                .email("dzaga73i98@gmail.com")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .chats(new HashSet<>())
+                .build();
+
+        user1.addFriend(user2);
+        user2.addFriend(user1);
+        user1.addFollower(user2);
+        user2.addFollower(user1);
+
+        doReturn(user1.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
+        when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
+
+        Assertions.assertTrue(user1.getFriends().contains(user2));
+
+        Assertions.assertTrue(user1.getChats().isEmpty());
+        Assertions.assertTrue(user2.getChats().isEmpty());
+
+        Assertions.assertEquals(user1.getId(), userService.deleteFriend(user2.getId()));
+        verify(chatService, never()).deleteChatById(anyLong());
+        Assertions.assertFalse(user2.getFollowers().contains(user1));
+        Assertions.assertFalse(user1.getFriends().contains(user2));
+        Assertions.assertFalse(user2.getFriends().contains(user1));
+        Assertions.assertTrue(user1.getFollowers().contains(user2));
+    }
+
+    @Test
+    void deleteFriendDonNotHaveFriend() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        User user2 = User.builder()
+                .id(2L)
+                .name("Ilya")
+                .password(passwordEncoder.encode("222"))
+                .email("dzaga73i98@gmail.com")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        doReturn(user1.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
+        when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
+
+        Assertions.assertThrows(BadInputDataException.class, () -> userService.refuseFollower(user2.getId()));
+    }
+
+    @Test
+    void deleteFriendYourself() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        doReturn(user1.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
+        Assertions.assertThrows(BadInputDataException.class, () -> userService.deleteFriend(user1.getId()));
+    }
+
+    @Test
+    void getAllUsers() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .build();
+
+        UserDto userDto1 = UserDto.builder()
+                .id(1L)
+                .name("Sergey")
+                .email("sergistan.utochkin@yandex.ru")
+                .build();
+
+        User user2 = User.builder()
+                .id(2L)
+                .name("Tom")
+                .role(Role.ROLE_ADMIN)
+                .build();
+
+        doReturn(user2.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.getAllNameAdmins()).thenReturn(List.of(user2.getName()));
+        when(userRepository.findAll()).thenReturn(List.of(user1));
+        when(userMapper.toListDto(List.of(user1))).thenReturn(List.of(userDto1));
+
+        Assertions.assertEquals(List.of(userDto1), userService.getAllUsers());
+    }
+
+    @Test
+    void getAllUsersAccessDenied() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .build();
+
+        User user2 = User.builder()
+                .id(2L)
+                .name("Tom")
+                .role(Role.ROLE_ADMIN)
+                .build();
+
+        doReturn(user1.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.getAllNameAdmins()).thenReturn(List.of(user2.getName()));
+
+        Assertions.assertThrows(AccessDeniedException.class, () -> userService.getAllUsers());
+    }
+
+    @Test
+    void getAllUsersWhenNoUsers() {
+        User user2 = User.builder()
+                .id(2L)
+                .name("Tom")
+                .role(Role.ROLE_ADMIN)
+                .build();
+
+        doReturn(user2.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.getAllNameAdmins()).thenReturn(List.of(user2.getName()));
+        when(userRepository.findAll()).thenReturn(Collections.emptyList());
+        when(userMapper.toListDto(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+        Assertions.assertEquals(Collections.emptyList(), userService.getAllUsers());
+    }
+
+    @Test
+    void getIdUser() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .build();
+
+        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
+        Assertions.assertEquals(user1.getId(), userService.getIdUser(user1.getName()));
+    }
+
+    @Test
+    void notGetIdUser() {
+        doThrow(UserNotFoundException.class).when(userRepository).findByName(Mockito.anyString());
+        Assertions.assertThrows(UserNotFoundException.class, () -> userService.getIdUser(Mockito.anyString()));
+    }
+
+    @Test
+    void getAllUsersFriends() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        User user2 = User.builder()
+                .id(2L)
+                .name("Ilya")
+                .password(passwordEncoder.encode("222"))
+                .email("dzaga73i98@gmail.com")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        UserDto userDto2 = UserDto.builder()
+                .id(2L)
+                .name("Ilya")
+                .email("dzaga73i98@gmail.com")
+                .build();
+
+        User user3 = User.builder()
+                .id(3L)
+                .name("Alina")
+                .password(passwordEncoder.encode("333"))
+                .email("umamimi@ya.com")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        UserDto userDto3 = UserDto.builder()
+                .id(3L)
+                .name("Alina")
+                .email("umamimi@ya.com")
+                .build();
+
+        user1.addFriend(user2);
+        user1.addFriend(user3);
+
+        doReturn(user1.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
+
+        Assertions.assertFalse(user1.getFriends().isEmpty());
+
+        when(userMapper.toListDto(user1.getFriends().stream().toList())).thenReturn(List.of(userDto2, userDto3));
+
+        Assertions.assertEquals(List.of(userDto2, userDto3), userService.getAllUsersFriends());
+    }
+
+    @Test
+    void notGetAllUsersFriends() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        doReturn(user1.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
+
+        Assertions.assertEquals(Collections.emptyList(), userService.getAllUsersFriends());
+    }
+
+    @Test
+    void getAllUsersFollowers() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        User user2 = User.builder()
+                .id(2L)
+                .name("Ilya")
+                .password(passwordEncoder.encode("222"))
+                .email("dzaga73i98@gmail.com")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        UserDto userDto2 = UserDto.builder()
+                .id(2L)
+                .name("Ilya")
+                .email("dzaga73i98@gmail.com")
+                .build();
+
+        User user3 = User.builder()
+                .id(3L)
+                .name("Alina")
+                .password(passwordEncoder.encode("333"))
+                .email("umamimi@ya.com")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        UserDto userDto3 = UserDto.builder()
+                .id(3L)
+                .name("Alina")
+                .email("umamimi@ya.com")
+                .build();
+
+        user1.addFollower(user2);
+        user1.addFollower(user3);
+
+        doReturn(user1.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
+
+        Assertions.assertFalse(user1.getFollowers().isEmpty());
+
+        when(userMapper.toListDto(user1.getFollowers().stream().toList())).thenReturn(List.of(userDto2, userDto3));
+
+        Assertions.assertEquals(List.of(userDto2, userDto3), userService.getAllUsersFollowers());
+    }
+
+    @Test
+    void notGetAllUsersFollowers() {
+        User user1 = User.builder()
+                .id(1L)
+                .name("Sergey")
+                .password(passwordEncoder.encode("111"))
+                .email("sergistan.utochkin@yandex.ru")
+                .role(Role.ROLE_USER)
+                .friends(new HashSet<>())
+                .followers(new HashSet<>())
+                .friendRequests(new HashSet<>())
+                .build();
+
+        doReturn(user1.getName()).when(authentication).getName();
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findByName(user1.getName())).thenReturn(Optional.of(user1));
+
+        Assertions.assertEquals(Collections.emptyList(), userService.getAllUsersFollowers());
+    }
 }
