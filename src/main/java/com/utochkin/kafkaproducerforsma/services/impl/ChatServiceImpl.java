@@ -137,7 +137,7 @@ public class ChatServiceImpl implements ChatService {
 
         chat.getUsers().remove(user);
         if (chat.getUsers().isEmpty()) {
-            deleteChatById(chatId);
+            chatRepository.deleteById(chatId);
         } else {
             chatRepository.save(chat);
         }
