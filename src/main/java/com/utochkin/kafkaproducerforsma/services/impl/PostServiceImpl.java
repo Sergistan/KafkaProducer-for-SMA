@@ -99,7 +99,11 @@ public class PostServiceImpl implements PostService {
         updatePost.setId(postId);
         updatePost.setUser(post.getUser());
         postRepository.save(updatePost);
-        return postMapper.toDto(updatePost);
+        PostDto updatedPostDto = postMapper.toDto(updatePost);
+
+        kafkaTemplate.send("topic-notification-user", post.getUser().getId(), updatedPostDto);
+
+        return updatedPostDto;
     }
 
     @CacheEvict(value = "PostService::getPost", key = "#postId")
@@ -122,6 +126,7 @@ public class PostServiceImpl implements PostService {
         List<Post> content = lastPostsFollowers.getContent();
         return postMapper.toListDto(content);
     }
+
     @Transactional(readOnly = true)
     @Override
     public List<PostDto> getAllPosts() {
@@ -140,7 +145,7 @@ public class PostServiceImpl implements PostService {
     public void checkAccessByAdmin() throws AccessDeniedException {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         List<String> allNameAdmins = userRepository.getAllNameAdmins();
-        if (allNameAdmins.stream().noneMatch(x->x.equals(name))) {
+        if (allNameAdmins.stream().noneMatch(x -> x.equals(name))) {
             throw new AccessDeniedException("Error: access denied!");
         }
     }
@@ -193,7 +198,7 @@ public class PostServiceImpl implements PostService {
                     .bucket(minioProperties.getBucket())
                     .build());
         } else {
-            System.out.println("Bucket "+ minioProperties.getBucket() +" already exists.");
+            System.out.println("Bucket " + minioProperties.getBucket() + " already exists.");
         }
     }
 
