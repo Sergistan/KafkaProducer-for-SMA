@@ -45,7 +45,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PostServiceImplTest {
