@@ -18,13 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -40,10 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = AuthController.class)
-@ContextConfiguration(classes = {AppConfig.class})
 @ExtendWith(MockitoExtension.class)
-@AutoConfigureMockMvc
-@Import(AuthController.class)
+@Import(AppConfig.class)
 class AuthControllerTest {
     private MockMvc mvc;
     @Autowired
@@ -64,6 +60,7 @@ class AuthControllerTest {
         mvc = MockMvcBuilders
                 .standaloneSetup(authController)
                 .setControllerAdvice(new ExceptionControllerAdvice())
+                .alwaysDo(print())
                 .build();
     }
 
@@ -84,8 +81,7 @@ class AuthControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1L))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("Sergey"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.accessToken").value("TOKEN_USER1"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.refreshToken").value("REFRESH_TOKEN_USER1"))
-                .andDo(print());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.refreshToken").value("REFRESH_TOKEN_USER1"));
     }
 
     @Test
@@ -100,8 +96,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.messageError").value("Incorrect username and/or password"))
-                .andDo(print());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.messageError").value("Incorrect username and/or password"));
     }
 
     @Test
@@ -138,8 +133,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1L))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("Sergey"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("sergistan.utochkin@yandex.ru"))
-                .andDo(print());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("sergistan.utochkin@yandex.ru"));
     }
 
     @Test
@@ -159,8 +153,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.messageError").value("Incorrect username and/or password"))
-                .andDo(print());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.messageError").value("Incorrect username and/or password"));
     }
 
     @Test
@@ -178,8 +171,7 @@ class AuthControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1L))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("Sergey"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.accessToken").value("TOKEN_USER1"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.refreshToken").value("NEW_REFRESH_TOKEN_USER1"))
-                .andDo(print());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.refreshToken").value("NEW_REFRESH_TOKEN_USER1"));
     }
 
     @Test
@@ -192,8 +184,20 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.messageError").value("Access denied"))
-                .andDo(print());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.messageError").value("Access denied"));
+    }
+
+    @Test
+    void refreshBadCredentials() throws Exception {
+        doThrow(new BadCredentialsException()).when(authService).refresh(anyString());
+
+        mvc.perform(MockMvcRequestBuilders
+                        .post("/api/v1/auth/refresh")
+                        .content("REFRESH_TOKEN_USER1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.messageError").value("Incorrect username and/or password"));
     }
 
     public static String asJsonString(final Object obj) {
