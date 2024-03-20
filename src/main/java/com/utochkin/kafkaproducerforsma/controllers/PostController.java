@@ -90,8 +90,7 @@ public class PostController {
     @Operation(summary = "Получение постов (ленты активности) от пользователей на которых подписан пользователь")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful get last posts followers ", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PostDto.class)))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "403", description = "Not forbidden", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<?> getFeedUser(@NotNull @RequestParam(defaultValue = "0") @Parameter(name = "page", description = "Номер отображаемой страницы ленты активности (начинается с 0)",
                                                  in = ParameterIn.QUERY, example = "0") int page,

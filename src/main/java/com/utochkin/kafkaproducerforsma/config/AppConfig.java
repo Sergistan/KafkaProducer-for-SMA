@@ -127,7 +127,7 @@ public class AppConfig {
                                 .permitAll()
                                 .requestMatchers("/api/v1/post/getAllPosts").hasRole("ADMIN")
                                 .requestMatchers("/api/v1/user/getAllUsers").hasRole("ADMIN")
-                                .requestMatchers("/api/v1/user/getAllChats").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/chat/getAllChats").hasRole("ADMIN")
                                 .anyRequest().authenticated())
                 .addFilterBefore(new JwtTokenFilter(tokenProvider),
                         UsernamePasswordAuthenticationFilter.class);

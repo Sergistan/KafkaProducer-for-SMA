@@ -115,7 +115,7 @@ public class ChatServiceImpl implements ChatService {
         User oneManChat = chat.getUsers().stream().findFirst().orElseThrow(UserNotFoundException::new);
 
         if (!oneManChat.getFriends().contains(user)) {
-            throw new BadInputDataException("This user can't join in this chat");
+            throw new AccessDeniedException("Error: access denied!");
         }
 
         chat.getUsers().add(user);
