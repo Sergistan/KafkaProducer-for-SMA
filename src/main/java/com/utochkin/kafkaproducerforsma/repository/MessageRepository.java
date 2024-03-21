@@ -14,9 +14,9 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    @Query(value = "SELECT f.text from messages f WHERE f.chat_id = ?1 ORDER BY f.id DESC limit 1", nativeQuery = true)
+    @Query(value = "SELECT f.text FROM messages f WHERE f.chat_id = ?1 ORDER BY f.id DESC LIMIT 1", nativeQuery = true)
     String getLastMessageFromChat(Long chatId);
 
-    @Query(value = "SELECT * from messages f WHERE f.chat_id = ?1 ORDER BY f.id", nativeQuery = true)
+    @Query(value = "SELECT * FROM messages f WHERE f.chat_id = ?1 ORDER BY f.id", nativeQuery = true)
     List<Message> getAllMessagesInChat(Long chatId);
 }
