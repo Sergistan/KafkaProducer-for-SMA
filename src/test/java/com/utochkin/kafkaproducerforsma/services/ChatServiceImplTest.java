@@ -510,7 +510,7 @@ class ChatServiceImplTest {
 
         when(userRepository.findByName(user2.getName())).thenReturn(Optional.of(user2));
         when(chatRepository.findById(chat.getId())).thenReturn(Optional.of(chat));
-        Assertions.assertThrows(BadInputDataException.class, () -> chatService.joinChat(chat.getId()));
+        Assertions.assertThrows(AccessDeniedException.class, () -> chatService.joinChat(chat.getId()));
     }
 
     @Test
