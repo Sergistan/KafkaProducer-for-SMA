@@ -11,6 +11,7 @@ import com.utochkin.kafkaproducerforsma.models.User;
 import com.utochkin.kafkaproducerforsma.props.MinioProperties;
 import com.utochkin.kafkaproducerforsma.repository.PostRepository;
 import com.utochkin.kafkaproducerforsma.repository.UserRepository;
+import com.utochkin.kafkaproducerforsma.sender.KafkaSenderService;
 import com.utochkin.kafkaproducerforsma.services.interfaces.PostService;
 import io.minio.*;
 import io.minio.http.Method;
@@ -44,7 +45,7 @@ public class PostServiceImpl implements PostService {
     private final UserRepository userRepository;
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
-    private final KafkaTemplate<Long, Object> kafkaTemplate;
+    private final KafkaSenderService kafkaSenderService;
 
     @Override
     public PostDto createPost(PostDto postDto, MultipartFile file) {
@@ -65,7 +66,7 @@ public class PostServiceImpl implements PostService {
         postRepository.save(createdPost);
         PostDto savedPostDto = postMapper.toDto(createdPost);
 
-        kafkaTemplate.send("topic-notification-user", user.getId(), savedPostDto);
+        kafkaSenderService.send(savedPostDto, user.getId());
 
         return savedPostDto;
     }
@@ -101,7 +102,7 @@ public class PostServiceImpl implements PostService {
         postRepository.save(updatePost);
         PostDto updatedPostDto = postMapper.toDto(updatePost);
 
-        kafkaTemplate.send("topic-notification-user", post.getUser().getId(), updatedPostDto);
+        kafkaSenderService.send(updatedPostDto, post.getUser().getId());
 
         return updatedPostDto;
     }

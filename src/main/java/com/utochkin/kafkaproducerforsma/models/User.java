@@ -34,9 +34,11 @@ public class User implements Serializable {
     @Enumerated(value = EnumType.STRING)
     private Role role;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user")
     private List<Post> posts = new LinkedList<>();
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(name = "friends",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
@@ -45,6 +47,7 @@ public class User implements Serializable {
     @EqualsAndHashCode.Exclude
     private Set<User> friends = new HashSet<>();
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(name = "followers",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
@@ -53,6 +56,7 @@ public class User implements Serializable {
     @EqualsAndHashCode.Exclude
     private Set<User> followers = new HashSet<>();
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(name = "friend_requests",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),

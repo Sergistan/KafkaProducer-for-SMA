@@ -11,6 +11,7 @@ import com.utochkin.kafkaproducerforsma.models.User;
 import com.utochkin.kafkaproducerforsma.props.MinioProperties;
 import com.utochkin.kafkaproducerforsma.repository.PostRepository;
 import com.utochkin.kafkaproducerforsma.repository.UserRepository;
+import com.utochkin.kafkaproducerforsma.sender.KafkaSenderService;
 import com.utochkin.kafkaproducerforsma.services.impl.PostServiceImpl;
 import io.minio.*;
 import io.minio.errors.*;
@@ -45,6 +46,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PostServiceImplTest {
@@ -63,7 +65,7 @@ class PostServiceImplTest {
     @Mock
     private MultipartFile multipartFile;
     @Mock
-    private KafkaTemplate<Long, Object> kafkaTemplate;
+    private KafkaSenderService kafkaSenderService;
     @Mock
     private SecurityContext securityContext;
     @Mock
@@ -141,7 +143,7 @@ class PostServiceImplTest {
 
         Assertions.assertEquals(postDtoWithPicture, postService.createPost(postDto, multipartFile));
         verify(postRepository, times(1)).save(post);
-        verify(kafkaTemplate, times(1)).send("topic-notification-user", user.getId(), postDtoWithPicture);
+        verify(kafkaSenderService, times(1)).send(postDtoWithPicture, user.getId());
     }
 
     @Test
@@ -195,7 +197,7 @@ class PostServiceImplTest {
 
         Assertions.assertEquals(postDtoWithPicture, postService.createPost(postDto, null));
         verify(postRepository, times(1)).save(post);
-        verify(kafkaTemplate, times(1)).send("topic-notification-user", user.getId(), postDtoWithPicture);
+        verify(kafkaSenderService, times(1)).send(postDtoWithPicture, user.getId());
     }
 
     @Test
@@ -270,8 +272,7 @@ class PostServiceImplTest {
 
         Assertions.assertEquals(postDtoWithPicture, postService.createPost(postDto, multipartFile));
         verify(postRepository, times(1)).save(post);
-        verify(kafkaTemplate, times(1)).send("topic-notification-user", user.getId(), postDtoWithPicture);
-    }
+        verify(kafkaSenderService, times(1)).send(postDtoWithPicture, user.getId());    }
 
     @Test
     void createPostWithMultipartFileAlreadyCreateBucket() throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
@@ -322,7 +323,7 @@ class PostServiceImplTest {
 
         Assertions.assertThrows(BadInputDataException.class, () -> postService.createPost(postDto, multipartFile));
         verify(postRepository, never()).save(post);
-        verify(kafkaTemplate, never()).send("topic-notification-user", user.getId(), postDtoWithPicture);
+        verify(kafkaSenderService, never()).send(postDtoWithPicture, user.getId());
     }
 
     @Test
@@ -376,7 +377,7 @@ class PostServiceImplTest {
 
         Assertions.assertThrows(BadInputDataException.class, () -> postService.createPost(postDto, multipartFile));
         verify(postRepository, never()).save(post);
-        verify(kafkaTemplate, never()).send("topic-notification-user", user.getId(), postDtoWithPicture);
+        verify(kafkaSenderService, never()).send(postDtoWithPicture, user.getId());
     }
 
     @Test
@@ -435,7 +436,7 @@ class PostServiceImplTest {
 
         Assertions.assertThrows(BadInputDataException.class, () -> postService.createPost(postDto, multipartFile));
         verify(postRepository, never()).save(post);
-        verify(kafkaTemplate, never()).send("topic-notification-user", user.getId(), postDtoWithPicture);
+        verify(kafkaSenderService, never()).send(postDtoWithPicture, user.getId());
     }
 
     @Test
@@ -575,7 +576,7 @@ class PostServiceImplTest {
         Assertions.assertEquals(updatePostDtoWithPicture, postService.updatePost(post.getId(), updatePostDto, multipartFile));
         verify(minioClient, times(1)).removeObject(RemoveObjectArgs.builder().bucket(minioProperties.getBucket()).object("UUID + Date + picture.jpg").build());
         verify(postRepository, times(1)).save(updatePost);
-        verify(kafkaTemplate, times(1)).send("topic-notification-user", post.getUser().getId(), updatePostDtoWithPicture);
+        verify(kafkaSenderService, times(1)).send(updatePostDtoWithPicture, user.getId());
     }
 
     @Test
@@ -708,7 +709,7 @@ class PostServiceImplTest {
         Assertions.assertEquals(updatePostDtoWithPicture, postService.updatePost(post.getId(), updatePostDto, multipartFile));
         verify(minioClient, never()).removeObject(RemoveObjectArgs.builder().bucket(minioProperties.getBucket()).object("UUID + Date + picture.jpg").build());
         verify(postRepository, times(1)).save(updatePost);
-        verify(kafkaTemplate, times(1)).send("topic-notification-user", post.getUser().getId(), updatePostDtoWithPicture);
+        verify(kafkaSenderService, times(1)).send(updatePostDtoWithPicture, user.getId());
     }
 
     @Test
