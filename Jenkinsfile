@@ -9,7 +9,7 @@ pipeline {
         }
        stage('Build docker image') {
             steps{
-                 sh 'docker build -t KafkaProducer-for-SMA .'
+                 sh 'docker build .'
                 }
          }
     }
