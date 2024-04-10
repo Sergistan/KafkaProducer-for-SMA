@@ -26,6 +26,3 @@ databaseChangeLog:
   - include:
       file: /tables/create_users.sql
       relativeToChangeLogFile: true
-  - include:
-      file: /tables/create_post_for_test.sql
-      relativeToChangeLogFile: true
